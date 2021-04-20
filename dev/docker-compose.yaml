@@ -9,6 +9,7 @@ services:
       - POSTGRES_USER=calorie-tracker-user
       - POSTGRES_DB=calorie-tracker
       - POSTGRES_HOST_AUTH_METHOD=trust
+
   redis:
     image: redis:3.2.5-alpine
     container_name: calorie-tracker-redis

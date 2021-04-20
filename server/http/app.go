@@ -56,7 +56,6 @@ func (a *App) buildRoutes() (*mux.Router, error) {
 
 func (a *App) ListenAndServe() {
 	a.logger.Infof("Starting listening on %s", a.address)
-	// TODO: Deal with graceful shutdown?
 	err := http.ListenAndServe(a.address, a.router)
 	if err != nil {
 		a.logger.WithError(err).Error("Error on starting server")

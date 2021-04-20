@@ -1,8 +1,10 @@
 metadata:
   appName: "calorie-tracker"
   version: "v0.0.1"
+
 http:
   address: localhost:8080
+
 db:
   user: calorie-tracker-user
   pass: ""

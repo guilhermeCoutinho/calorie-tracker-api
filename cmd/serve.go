@@ -15,10 +15,7 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/guilhermeCoutinho/api-studies/server/http"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -33,8 +30,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := getLogger(config)
-		startHTTPServer(logger)
+		startHTTPServer()
 	},
 }
 
@@ -42,15 +38,17 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func startHTTPServer(logger logrus.FieldLogger) {
+func startHTTPServer() {
+	logger := getLogger(config)
+
 	_, err := connectToPG("db")
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err.Error())
 	}
 
 	app, err := http.NewApp(config, logger)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatalln(err.Error())
 	}
 	app.ListenAndServe()
 }
