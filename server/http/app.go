@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -49,8 +50,16 @@ func (a *App) configureRoutes() error {
 func (a *App) buildRoutes() (*mux.Router, error) {
 	r := mux.NewRouter()
 
-	authenticatedRouter := r.PathPrefix("/").Subrouter()
-	authenticatedRouter.Handle("/healthcheck", newHealthcheckController()).Methods("GET")
+	healthCheckController := controller.NewHealthcheck(a.logger)
+	authController := controller.NewAuth(a.logger)
+	userController := controller.NewUser(a.logger)
+
+	r.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
+
+	r.HandleFunc("/user", userController.Create).Methods("POST")
+	r.HandleFunc("/user", userController.GetProfile).Methods("GET")
+
+	r.HandleFunc("/auth", authController.Authenticate).Methods("POST")
 	return r, nil
 }
 
