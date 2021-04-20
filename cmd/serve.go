@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/guilhermeCoutinho/api-studies/server/http"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -36,14 +38,19 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func startHTTPServer(logger logrus.FieldLogger) {
-	app, err := http.NewApp(config, logger)
-	if err != nil {
-		panic(err)
-	}
-	app.ListenAndServe()
-}
-
 func init() {
 	rootCmd.AddCommand(serveCmd)
+}
+
+func startHTTPServer(logger logrus.FieldLogger) {
+	_, err := connectToPG("db")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	app, err := http.NewApp(config, logger)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	app.ListenAndServe()
 }

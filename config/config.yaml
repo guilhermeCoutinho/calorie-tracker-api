@@ -3,3 +3,12 @@ metadata:
   version: "v0.0.1"
 http:
   address: localhost:8080
+db:
+  user: calorie-tracker-user
+  pass: ""
+  host: localhost
+  database: calorie-tracker
+  port: 9000
+  poolSize: 20
+  maxRetries: 3
+  connectionTimeout: 1
