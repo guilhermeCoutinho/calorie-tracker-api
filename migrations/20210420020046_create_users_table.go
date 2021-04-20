@@ -17,10 +17,10 @@ func init() {
 			password VARCHAR NOT NULL,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-			updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-			
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+			CONSTRAINT unique_user_name UNIQUE (user_name)
 		  );
-		  `)
+		`)
 		return err
 	}
 
