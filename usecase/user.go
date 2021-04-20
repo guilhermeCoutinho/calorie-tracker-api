@@ -1,13 +1,13 @@
 package usecase
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/models"
 )
 
-func CreateUser(userName, password string) error {
+func (u *Usecase) CreateUser(userName, password string) error {
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
 		return err
@@ -19,7 +19,5 @@ func CreateUser(userName, password string) error {
 		Password: hashedPassword,
 	}
 
-	fmt.Println("Create user called with %s %+v", hashedPassword, user)
-
-	return nil
+	return u.dal.UpsertUser(context.Background(), user)
 }
