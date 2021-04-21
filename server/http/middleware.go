@@ -30,17 +30,20 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, err := m.usecase.UUIDFromToken(token)
+		claims, err := m.usecase.ClaimsFromToken(token)
 		if err != nil {
 			m.logger.WithError(err).Error("Failed to retrieve uuid from token")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
 		}
 
-		m.logger.WithFields(logrus.Fields{
-			"userID": userID,
-		}).Info("User authorized")
+		logger := m.logger.WithFields(logrus.Fields{
+			"userID":      claims.UserID,
+			"accessLevel": claims.AccessLevel,
+		})
 
-		r = r.WithContext(m.usecase.UUIDToCtx(r.Context(), userID))
+		logger.Info("User authorized")
+		r = r.WithContext(m.usecase.UUIDToCtx(r.Context(), claims.UserID))
 		next.ServeHTTP(w, r)
 	})
 }

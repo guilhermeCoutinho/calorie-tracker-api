@@ -19,6 +19,11 @@ const (
 	expirationClaim  = "exp"
 )
 
+type Claims struct {
+	UserID      uuid.UUID
+	AccessLevel string
+}
+
 func (u *Usecase) Login(ctx context.Context, userName, password string) (string, error) {
 	user, err := u.dal.User.GetUser(ctx, userName)
 	if err != nil {
@@ -38,9 +43,9 @@ func getToken(userID uuid.UUID, expiration time.Duration) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims[accessLevelClaim] = true
+	claims[accessLevelClaim] = "admin"
 	claims[userIDClaim] = userID
-	claims[expirationClaim] = time.Now().Add(expiration).Unix()
+	claims[expirationClaim] = time.Now().UTC().Add(expiration).Unix()
 
 	token.Claims = claims
 
@@ -52,7 +57,7 @@ func getToken(userID uuid.UUID, expiration time.Duration) (string, error) {
 	return tokenString, nil
 }
 
-func (u *Usecase) UUIDFromToken(tokenStr string) (uuid.UUID, error) {
+func (u *Usecase) ClaimsFromToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid sign method")
@@ -61,21 +66,31 @@ func (u *Usecase) UUIDFromToken(tokenStr string) (uuid.UUID, error) {
 	})
 
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok || !token.Valid {
-		return uuid.Nil, fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	if err = claims.Valid(); err != nil {
+		return nil, err
 	}
 
 	userIDStr := claims[userIDClaim].(string)
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
-	return userID, nil
+
+	accessLevel := claims[accessLevelClaim].(string)
+
+	return &Claims{
+		UserID:      userID,
+		AccessLevel: accessLevel,
+	}, nil
 }
 
 func hashPassword(password string) (string, error) {
