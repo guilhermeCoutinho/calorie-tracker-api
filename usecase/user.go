@@ -7,7 +7,7 @@ import (
 	"github.com/guilhermeCoutinho/api-studies/models"
 )
 
-func (u *Usecase) CreateUser(userName, password string) error {
+func (u *Usecase) CreateUser(ctx context.Context, userName, password string) error {
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
 		return err
@@ -19,26 +19,5 @@ func (u *Usecase) CreateUser(userName, password string) error {
 		Password: hashedPassword,
 	}
 
-	return u.dal.UpsertUser(context.Background(), user)
-}
-
-func (u *Usecase) UserLogin(userName, password string) (*models.User, error) {
-	ctx := context.Background()
-	user, err := u.dal.GetUser(ctx, userName)
-	if err != nil {
-		return nil, err
-	}
-
-	err = verifyPassword(user.Password, password)
-	if err != nil {
-		return nil, err
-	}
-
-	user.Token = uuid.New().String()
-	err = u.dal.UpsertUser(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return u.dal.User.UpsertUser(ctx, user)
 }

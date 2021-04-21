@@ -4,33 +4,53 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/guilhermeCoutinho/api-studies/usecase"
 	"github.com/sirupsen/logrus"
 )
 
 type Auth struct {
-	logger logrus.FieldLogger
+	usecase *usecase.Usecase
+	logger  logrus.FieldLogger
 }
 
 func NewAuth(
+	usecase *usecase.Usecase,
 	logger logrus.FieldLogger,
 ) *Auth {
 	return &Auth{
-		logger: logger,
+		usecase: usecase,
+		logger:  logger,
 	}
 }
 
-type AuthRequest struct {
+type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-func (a *Auth) Authenticate(w http.ResponseWriter, r *http.Request) {
-	args := &AuthRequest{}
+type LoginResponse struct {
+	AccessToken string `json:"token"`
+}
+
+func (a *Auth) Login(w http.ResponseWriter, r *http.Request) {
+	args := &LoginRequest{}
 	err := json.NewDecoder(r.Body).Decode(args)
 	if err != nil {
 		a.logger.WithError(err).Error("Failed to parse signup payload")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	//usecase.Auth()
+
+	token, err := a.usecase.Login(r.Context(), args.Username, args.Password)
+	if err != nil {
+		a.logger.WithError(err).Error("Failed to create user")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response := LoginResponse{
+		AccessToken: token,
+	}
+	writeResponse(response, w)
+	a.logger.Info("User login successfully")
 }

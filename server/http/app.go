@@ -50,18 +50,24 @@ func (a *App) configureRoutes(usecase *usecase.Usecase) error {
 }
 
 func (a *App) buildRoutes(usecase *usecase.Usecase) (*mux.Router, error) {
+	authMiddleware := Middleware{
+		usecase: usecase,
+		logger:  a.logger,
+	}
+
 	r := mux.NewRouter()
+	authRouter := r.PathPrefix("/").Subrouter()
+	authRouter.Use(authMiddleware.Authenticate)
 
 	healthCheckController := controller.NewHealthcheck(a.logger)
-	authController := controller.NewAuth(a.logger)
 	userController := controller.NewUser(a.logger, usecase)
+	authController := controller.NewAuth(usecase, a.logger)
 
-	r.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
+	authRouter.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
 
 	r.HandleFunc("/users", userController.Create).Methods("POST")
-	r.HandleFunc("/users", userController.Login).Methods("GET")
-
-	r.HandleFunc("/auth", authController.Authenticate).Methods("POST")
+	//r.HandleFunc("/users", userController.Login).Methods("GET")
+	r.HandleFunc("/auth", authController.Login).Methods("GET")
 	return r, nil
 }
 

@@ -37,7 +37,7 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.usecase.CreateUser(args.Username, args.Password)
+	err = u.usecase.CreateUser(r.Context(), args.Username, args.Password)
 	if err != nil {
 		u.logger.WithError(err).Error("Failed to create user")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -46,38 +46,6 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	u.logger.Info("User created successfully")
-}
-
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type LoginResponse struct {
-	AccessToken string `json:"token"`
-}
-
-func (u *User) Login(w http.ResponseWriter, r *http.Request) {
-	args := &LoginRequest{}
-	err := json.NewDecoder(r.Body).Decode(args)
-	if err != nil {
-		u.logger.WithError(err).Error("Failed to parse signup payload")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	user, err := u.usecase.UserLogin(args.Username, args.Password)
-	if err != nil {
-		u.logger.WithError(err).Error("Failed to create user")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	response := LoginResponse{
-		AccessToken: user.Token,
-	}
-	writeResponse(response, w)
-	u.logger.Info("User login successfully")
 }
 
 func writeResponse(data interface{}, w http.ResponseWriter) {
