@@ -8,12 +8,12 @@ import (
 
 //User is the model that governs all notes objects retrived or inserted into the DB
 type User struct {
-	ID       uuid.UUID `json:"_" sql:"id, pk"`
-	UserName string    `sql:"user_name,notnull"`
-	Password string    `sql:"password,notnull"`
-	//	Token         string
+	ID       uuid.UUID `json:"_" pg:"id, pk"`
+	UserName string    `pg:"user_name,notnull"`
+	Password string    `pg:"password,notnull"`
+	Token    string    `pg:"access_token"`
 	//	RefreshToken string
 
-	CreatedAt time.Time `sql:"created_at,notnull"`
-	UpdatedAt time.Time `sql:"updated_at,notnull"`
+	CreatedAt time.Time `pg:"created_at,notnull"`
+	UpdatedAt time.Time `pg:"updated_at,notnull"`
 }

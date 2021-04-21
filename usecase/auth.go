@@ -1,6 +1,8 @@
 package usecase
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"golang.org/x/crypto/bcrypt"
+)
 
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -11,6 +13,6 @@ func hashPassword(password string) (string, error) {
 	return string(bytes), nil
 }
 
-func verifyPassword(userPassword string, providedPassword string) error {
-	return bcrypt.CompareHashAndPassword([]byte(providedPassword), []byte(userPassword))
+func verifyPassword(hashedPassword string, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

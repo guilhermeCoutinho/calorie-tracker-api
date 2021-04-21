@@ -58,8 +58,8 @@ func (a *App) buildRoutes(usecase *usecase.Usecase) (*mux.Router, error) {
 
 	r.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
 
-	r.HandleFunc("/user", userController.Create).Methods("POST")
-	r.HandleFunc("/user", userController.GetProfile).Methods("GET")
+	r.HandleFunc("/users", userController.Create).Methods("POST")
+	r.HandleFunc("/users", userController.Login).Methods("GET")
 
 	r.HandleFunc("/auth", authController.Authenticate).Methods("POST")
 	return r, nil
