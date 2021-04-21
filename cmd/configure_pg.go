@@ -1,11 +1,34 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/go-pg/pg/v10"
 )
+
+type dbLogger struct{}
+
+func (d dbLogger) BeforeQuery(c context.Context, q *pg.QueryEvent) (context.Context, error) {
+	return c, nil
+}
+
+func (d dbLogger) AfterQuery(c context.Context, q *pg.QueryEvent) error {
+	query, err := q.FormattedQuery()
+	fmt.Println(string(query), err)
+	return nil
+}
+
+type nullLogger struct{}
+
+func (d nullLogger) BeforeQuery(c context.Context, q *pg.QueryEvent) (context.Context, error) {
+	return c, nil
+}
+
+func (d nullLogger) AfterQuery(c context.Context, q *pg.QueryEvent) error {
+	return nil
+}
 
 func connectToPG(prefix string) (*pg.DB, error) {
 	user := config.GetString(fmt.Sprintf("%s.user", prefix))
@@ -26,6 +49,7 @@ func connectToPG(prefix string) (*pg.DB, error) {
 		MaxRetries: maxRetries,
 	}
 	db := pg.Connect(options)
+	db.AddQueryHook(nullLogger{})
 	err := waitForConnection(db, timeout)
 	return db, err
 }
