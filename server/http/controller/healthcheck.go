@@ -19,5 +19,5 @@ func NewHealthcheck(
 }
 
 func (m *HealthCheck) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("WORKING"))
+	w.Write([]byte("Pong"))
 }

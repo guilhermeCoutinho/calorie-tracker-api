@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -41,7 +40,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			"userID": userID,
 		}).Info("User authorized")
 
-		r = r.WithContext(context.WithValue(r.Context(), "userID", userID))
+		r = r.WithContext(m.usecase.UUIDToCtx(r.Context(), userID))
 		next.ServeHTTP(w, r)
 	})
 }
