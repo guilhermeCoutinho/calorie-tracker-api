@@ -7,14 +7,14 @@ import (
 )
 
 type Usecase struct {
-	dal    dal.UserDAL
+	dal    *dal.DAL
 	config *viper.Viper
 	logger logrus.FieldLogger
 }
 
 func NewUsecase(
 	config *viper.Viper,
-	dal dal.UserDAL,
+	dal *dal.DAL,
 	logger logrus.FieldLogger,
 ) *Usecase {
 	return &Usecase{

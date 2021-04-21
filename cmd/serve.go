@@ -48,7 +48,7 @@ func startHTTPServer() {
 		logger.Fatalln(err.Error())
 	}
 
-	dal := dal.NewUser(config, db)
+	dal := dal.NewDAL(config, db)
 	usecase := usecase.NewUsecase(config, dal, logger)
 
 	app, err := http.NewApp(config, logger, usecase)
