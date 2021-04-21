@@ -2,22 +2,27 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
-const userIDCtxKey = "userID"
+const ctxKey = "ctxKey"
 
-func (u *Usecase) UUIDToCtx(ctx context.Context, userID uuid.UUID) context.Context {
-	return context.WithValue(ctx, userIDCtxKey, userID)
+func (u *Usecase) ClaimsToCtx(ctx context.Context, claims *Claims) context.Context {
+	rawBytes, _ := json.Marshal(claims)
+	return context.WithValue(ctx, ctxKey, rawBytes)
 }
 
-func UUIDFromCtx(ctx context.Context) (uuid.UUID, error) {
-	val := ctx.Value(userIDCtxKey)
-	valUUID, ok := val.(uuid.UUID)
+func ClaimsFromCtx(ctx context.Context) (*Claims, error) {
+	val, ok := ctx.Value(ctxKey).([]byte)
 	if !ok {
-		return uuid.Nil, fmt.Errorf("failed to fetch id from ctx")
+		return nil, fmt.Errorf("failed to assert context")
 	}
-	return valUUID, nil
+	var claim Claims
+	err := json.Unmarshal(val, &claim)
+	if err != nil {
+		return nil, err
+	}
+
+	return &claim, nil
 }

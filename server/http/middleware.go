@@ -43,7 +43,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		})
 
 		logger.Info("User authorized")
-		r = r.WithContext(m.usecase.UUIDToCtx(r.Context(), claims.UserID))
+		r = r.WithContext(m.usecase.ClaimsToCtx(r.Context(), claims))
 		next.ServeHTTP(w, r)
 	})
 }

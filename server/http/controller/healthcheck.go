@@ -19,5 +19,6 @@ func NewHealthcheck(
 }
 
 func (m *HealthCheck) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	m.logger.Debug("Working")
 	w.Write([]byte("Pong"))
 }
