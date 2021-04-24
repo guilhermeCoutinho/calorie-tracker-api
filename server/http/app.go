@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -16,7 +17,7 @@ type App struct {
 	config  *viper.Viper
 	logger  logrus.FieldLogger
 	router  *mux.Router
-	wrapper *HTTPWrapper
+	wrapper *wrapper.HTTPWrapper
 }
 
 func NewApp(
@@ -27,7 +28,7 @@ func NewApp(
 	app := &App{
 		config:  config,
 		logger:  logger,
-		wrapper: NewHTTPWrapper(logger),
+		wrapper: wrapper.NewHTTPWrapper(logger),
 	}
 
 	app.buildRoutes(dal)
@@ -58,7 +59,8 @@ func (a *App) buildRoutes(dal *dal.DAL) {
 	a.wrapper.Register(router, "/users", userController)
 	a.wrapper.Register(router, "/auth", authController)
 	a.wrapper.Register(router, "/healthcheck", healthCheckController)
-	a.wrapper.Register(authRouter, "/meals", mealController)
+
+	a.wrapper.Register(authRouter, "/users/{userID}/meals", mealController)
 
 	a.router = router
 }

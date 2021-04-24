@@ -28,12 +28,25 @@ func NewMeal(
 	}
 }
 
-func (m *Meal) Post(ctx context.Context, args *messages.CreateMealRequest) (*messages.BaseResponse, error) {
+type Vars struct {
+	UserID string `json:"userID"`
+}
+
+func (m *Meal) Post(ctx context.Context, args *messages.CreateMealRequest, vars *Vars) (*messages.BaseResponse, error) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	userID := claims.UserID
+
+	userID := uuid.Nil
+	if vars.UserID == "me" {
+		userID = claims.UserID
+	} else {
+		userID, err = uuid.Parse(vars.UserID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	meal, err := m.mealFromRequest(userID, args)
 	if err != nil {

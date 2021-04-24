@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,5 +31,5 @@ func ClaimsFromCtx(ctx context.Context) (*Claims, error) {
 }
 
 func LoggerFromCtx(ctx context.Context) logrus.FieldLogger {
-	return ctx.Value(models.LoggerCtxKey).(logrus.FieldLogger)
+	return ctx.Value(wrapper.LoggerCtxKey).(logrus.FieldLogger)
 }

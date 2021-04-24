@@ -1,8 +1,9 @@
-package http
+package wrapper
 
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -57,26 +58,40 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 			"methodName": method.Name,
 		})
 
-		requestType := method.Type.In(2)
-		var instance reflect.Value
-		if requestType.Kind() == reflect.Ptr {
-			instance = reflect.New(requestType.Elem()).Elem()
-		} else {
-			instance = reflect.New(requestType).Elem()
-		}
+		payloadType := method.Type.In(2)
+		payload := instantiate(payloadType)
 
-		err := json.NewDecoder(r.Body).Decode(instance.Addr().Interface())
-		if err != nil {
+		varsType := method.Type.In(3)
+		varsValue := instantiate(varsType)
+
+		err := json.NewDecoder(r.Body).Decode(payload.Addr().Interface())
+		switch {
+		case err == io.EOF:
+			// empty body, do nothing
+		case err != nil:
 			logger.WithError(err).Error("Failed to parse payload")
 			writter.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
+		muxVars := mux.Vars(r)
+		if len(muxVars) > 0 {
+			marshalledVars, _ := json.Marshal(mux.Vars(r))
+			json.Unmarshal(marshalledVars, varsValue.Addr().Interface())
+			if err != nil {
+				logger.WithError(err).Error("Failed to parse vars from ur")
+				writter.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
+
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, LoggerCtxKey, logger)
-		args := instance.Addr().Interface()
+		args := payload.Addr().Interface()
+		vars := varsValue.Addr().Interface()
+
 		responseSlice := method.Func.Call([]reflect.Value{
-			handler, reflect.ValueOf(ctx), reflect.ValueOf(args),
+			handler, reflect.ValueOf(ctx), reflect.ValueOf(args), reflect.ValueOf(vars),
 		})
 
 		handlerResult, handlerErr := responseSlice[0], responseSlice[1]
@@ -96,12 +111,23 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 
 		writter.WriteHeader(http.StatusOK)
 		writter.Write(bytes)
+		logger.Debug("Request processed")
 	}
+}
+
+func instantiate(instanceType reflect.Type) reflect.Value {
+	var instance reflect.Value
+	if instanceType.Kind() == reflect.Ptr {
+		instance = reflect.New(instanceType.Elem()).Elem()
+	} else {
+		instance = reflect.New(instanceType).Elem()
+	}
+	return instance
 }
 
 type HandlerTemplate struct{}
 
-func (handlerTemplate *HandlerTemplate) RequestTemplate(ctx context.Context, pointer *struct{}) (*struct{}, error) {
+func (handlerTemplate *HandlerTemplate) RequestTemplate(ctx context.Context, pointer *struct{}, routeVars *struct{}) (*struct{}, error) {
 	return nil, nil
 }
 
