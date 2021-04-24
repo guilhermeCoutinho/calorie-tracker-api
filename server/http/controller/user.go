@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/usecase"
 	"github.com/sirupsen/logrus"
 )
@@ -23,13 +24,8 @@ func NewUser(
 	}
 }
 
-type CreateRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func (u *User) Create(w http.ResponseWriter, r *http.Request) {
-	args := &CreateRequest{}
+	args := &messages.CreateUserRequest{}
 	err := json.NewDecoder(r.Body).Decode(args)
 	if err != nil {
 		u.logger.WithError(err).Error("Failed to parse signup payload")

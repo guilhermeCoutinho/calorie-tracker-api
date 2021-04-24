@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/usecase"
 	"github.com/sirupsen/logrus"
 )
@@ -14,8 +15,8 @@ type Auth struct {
 }
 
 func NewAuth(
-	usecase *usecase.Usecase,
 	logger logrus.FieldLogger,
+	usecase *usecase.Usecase,
 ) *Auth {
 	return &Auth{
 		usecase: usecase,
@@ -23,17 +24,8 @@ func NewAuth(
 	}
 }
 
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type LoginResponse struct {
-	AccessToken string `json:"token"`
-}
-
 func (a *Auth) Login(w http.ResponseWriter, r *http.Request) {
-	args := &LoginRequest{}
+	args := &messages.LoginRequest{}
 	err := json.NewDecoder(r.Body).Decode(args)
 	if err != nil {
 		a.logger.WithError(err).Error("Failed to parse signup payload")
@@ -48,7 +40,7 @@ func (a *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := LoginResponse{
+	response := messages.LoginResponse{
 		AccessToken: token,
 	}
 	writeResponse(response, w)
