@@ -1,24 +1,19 @@
 package controller
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
-	"github.com/sirupsen/logrus"
+	"github.com/guilhermeCoutinho/api-studies/messages"
 )
 
-type HealthCheck struct {
-	logger logrus.FieldLogger
+type HealthCheck struct{}
+
+func NewHealthcheck() *HealthCheck {
+	return &HealthCheck{}
 }
 
-func NewHealthcheck(
-	logger logrus.FieldLogger,
-) *HealthCheck {
-	return &HealthCheck{
-		logger: logger,
-	}
-}
-
-func (m *HealthCheck) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	m.logger.Debug("Working")
-	w.Write([]byte("Pong"))
+func (m *HealthCheck) GetPing(ctx context.Context, args *struct{}) (*messages.BaseResponse, error) {
+	return &messages.BaseResponse{Msg: "Pong", Code: http.StatusOK}, fmt.Errorf("Testing error new")
 }

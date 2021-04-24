@@ -17,7 +17,6 @@ package cmd
 import (
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/server/http"
-	"github.com/guilhermeCoutinho/api-studies/usecase"
 	"github.com/spf13/cobra"
 )
 
@@ -49,9 +48,8 @@ func startHTTPServer() {
 	}
 
 	dal := dal.NewDAL(config, db)
-	usecase := usecase.NewUsecase(config, dal, logger)
 
-	app, err := http.NewApp(config, logger, usecase)
+	app, err := http.NewApp(config, logger, dal)
 	if err != nil {
 		logger.Fatalln(err.Error())
 	}

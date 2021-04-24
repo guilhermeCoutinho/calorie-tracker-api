@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
-	"github.com/guilhermeCoutinho/api-studies/usecase"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -16,22 +16,21 @@ type App struct {
 	config  *viper.Viper
 	logger  logrus.FieldLogger
 	router  *mux.Router
+	wrapper *HTTPWrapper
 }
 
 func NewApp(
 	config *viper.Viper,
 	logger logrus.FieldLogger,
-	usecase *usecase.Usecase,
+	dal *dal.DAL,
 ) (*App, error) {
 	app := &App{
-		config: config,
-		logger: logger,
+		config:  config,
+		logger:  logger,
+		wrapper: NewHTTPWrapper(logger),
 	}
 
-	err := app.configureRoutes(usecase)
-	if err != nil {
-		return nil, err
-	}
+	app.buildRoutes(dal)
 	app.configureAddress()
 
 	return app, nil
@@ -42,35 +41,27 @@ func (a *App) configureAddress() {
 	a.address = a.config.GetString("http.address")
 }
 
-func (a *App) configureRoutes(usecase *usecase.Usecase) error {
-	a.logger.Info("configuring http routes")
-	var err error
-	a.router, err = a.buildRoutes(usecase)
-	return err
-}
-
-func (a *App) buildRoutes(usecase *usecase.Usecase) (*mux.Router, error) {
+func (a *App) buildRoutes(dal *dal.DAL) {
 	authMiddleware := Middleware{
-		usecase: usecase,
-		logger:  a.logger,
+		logger: a.logger,
 	}
 
-	r := mux.NewRouter()
-	authRouter := r.PathPrefix("/").Subrouter()
+	router := mux.NewRouter()
+	authRouter := router.PathPrefix("/").Subrouter()
 	authRouter.Use(authMiddleware.Authenticate)
 
-	healthCheckController := controller.NewHealthcheck(a.logger)
-	userController := controller.NewUser(a.logger, usecase)
-	authController := controller.NewAuth(a.logger, usecase)
-	mealController := controller.NewMeal(a.logger, usecase)
+	healthCheckController := controller.NewHealthcheck()
+	userController := controller.NewUser(dal, a.config)
+	authController := controller.NewAuth(dal, a.config)
+	mealController := controller.NewMeal(dal, a.config)
 
-	r.HandleFunc("/users", userController.Create).Methods("POST")
-	r.HandleFunc("/auth", authController.Login).Methods("POST")
+	a.wrapper.Register(router, "/users", userController)
+	a.wrapper.Register(router, "/auth", authController)
 
-	authRouter.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
-	authRouter.HandleFunc("/meals", mealController.Create).Methods("POST")
+	a.wrapper.Register(authRouter, "/meals", mealController)
+	a.wrapper.Register(router, "/healthcheck", healthCheckController)
 
-	return r, nil
+	a.router = router
 }
 
 func (a *App) ListenAndServe() {

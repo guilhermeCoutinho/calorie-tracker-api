@@ -1,4 +1,4 @@
-package usecase
+package controller
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 const ctxKey = "ctxKey"
 
-func (u *Usecase) ClaimsToCtx(ctx context.Context, claims *Claims) context.Context {
+func ClaimsToCtx(ctx context.Context, claims *Claims) context.Context {
 	rawBytes, _ := json.Marshal(claims)
 	return context.WithValue(ctx, ctxKey, rawBytes)
 }

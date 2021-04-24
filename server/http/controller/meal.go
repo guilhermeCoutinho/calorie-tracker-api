@@ -1,49 +1,116 @@
 package controller
 
 import (
-	"encoding/json"
+	"context"
+	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
-	"github.com/guilhermeCoutinho/api-studies/usecase"
-	"github.com/sirupsen/logrus"
+	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/spf13/viper"
 )
 
 type Meal struct {
-	logger  logrus.FieldLogger
-	usecase *usecase.Usecase
+	dal    *dal.DAL
+	config *viper.Viper
 }
 
 func NewMeal(
-	logger logrus.FieldLogger,
-	usecase *usecase.Usecase,
+	dal *dal.DAL,
+	config *viper.Viper,
 ) *Meal {
 	return &Meal{
-		logger:  logger,
-		usecase: usecase,
+		dal:    dal,
+		config: config,
 	}
 }
 
-func (u *Meal) Create(w http.ResponseWriter, r *http.Request) {
-	logger := u.logger.WithFields(logrus.Fields{
-		"methodName": "createMeal",
-	})
-
-	args := &messages.CreateMealRequest{}
-	err := json.NewDecoder(r.Body).Decode(args)
+func (m *Meal) PostMeal(ctx context.Context, args *messages.CreateMealRequest) (*messages.BaseResponse, error) {
+	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
-		logger.WithError(err).Error("Failed to parse payload")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return nil, err
+	}
+	userID := claims.UserID
+
+	meal, err := m.mealFromRequest(userID, args)
+	if err != nil {
+		return nil, err
 	}
 
-	err = u.usecase.CreateMeal(r.Context(), args)
+	err = m.validateNewMealEntry(meal)
 	if err != nil {
-		logger.WithError(err).Error("Failed to create meal")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	logger.Info("Meal created successfully")
+	err = m.tryEnrichFromCaloriesAPI(meal)
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.dal.Meal.UpsertMeal(ctx, meal)
+	if err != nil {
+		return nil, err
+	}
+
+	return &messages.BaseResponse{Code: http.StatusOK}, nil
+}
+
+func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealRequest) (*models.Meal, error) {
+	mealDate, err := time.Parse("2006-Jan-01", req.Date)
+	if err != nil {
+		return nil, err
+	}
+
+	mealTime, err := time.ParseDuration(req.Time)
+	if err != nil {
+		return nil, err
+	}
+
+	meal := &models.Meal{
+		ID:       uuid.New(),
+		UserID:   userID,
+		Meal:     req.Meal,
+		Calories: req.Calories,
+		Date:     mealDate.Add(mealTime),
+
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	return meal, nil
+}
+
+func (m *Meal) validateNewMealEntry(meal *models.Meal) error {
+	if meal.Date.After(time.Now().UTC()) {
+		return fmt.Errorf("cannot meals in the future")
+	}
+
+	if meal.Calories < 0 {
+		return fmt.Errorf("calories cannot be negative")
+	}
+
+	if meal.Meal == "" {
+		return fmt.Errorf("meal cannot have empty text")
+	}
+
+	return nil
+}
+
+func (m *Meal) tryEnrichFromCaloriesAPI(meal *models.Meal) error {
+	if meal.Calories == 0 {
+		fetchedCalories, err := m.fetchCaloriesFromProvider(meal.Meal)
+		if err != nil {
+			return err
+		}
+
+		meal.Calories = fetchedCalories
+	}
+	return nil
+}
+
+func (m *Meal) fetchCaloriesFromProvider(text string) (int, error) {
+	return 99, nil
 }

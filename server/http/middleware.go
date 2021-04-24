@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/guilhermeCoutinho/api-studies/usecase"
+	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
 	"github.com/sirupsen/logrus"
 )
 
 type Middleware struct {
-	usecase *usecase.Usecase
-	logger  logrus.FieldLogger
+	auth   *controller.Auth
+	logger logrus.FieldLogger
 }
 
 func (m *Middleware) Authenticate(next http.Handler) http.Handler {
@@ -29,7 +29,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := m.usecase.ClaimsFromToken(token)
+		claims, err := m.auth.ClaimsFromToken(token)
 		if err != nil {
 			m.logger.WithError(err).Error("Failed to retrieve uuid from token")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -42,7 +42,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		})
 
 		logger.Info("User authorized")
-		r = r.WithContext(m.usecase.ClaimsToCtx(r.Context(), claims))
+		r = r.WithContext(controller.ClaimsToCtx(r.Context(), claims))
 		next.ServeHTTP(w, r)
 	})
 }

@@ -1,51 +1,56 @@
 package controller
 
 import (
-	"encoding/json"
+	"context"
 	"net/http"
 
+	"github.com/google/uuid"
+	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
-	"github.com/guilhermeCoutinho/api-studies/usecase"
-	"github.com/sirupsen/logrus"
+	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/spf13/viper"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	logger  logrus.FieldLogger
-	usecase *usecase.Usecase
+	dal    *dal.DAL
+	config *viper.Viper
 }
 
 func NewUser(
-	logger logrus.FieldLogger,
-	usecase *usecase.Usecase,
+	dal *dal.DAL,
+	config *viper.Viper,
 ) *User {
 	return &User{
-		logger:  logger,
-		usecase: usecase,
+		dal:    dal,
+		config: config,
 	}
 }
 
-func (u *User) Create(w http.ResponseWriter, r *http.Request) {
-	args := &messages.CreateUserRequest{}
-	err := json.NewDecoder(r.Body).Decode(args)
+func (u *User) PostUser(ctx context.Context, args *messages.CreateUserRequest) (*messages.BaseResponse, error) {
+	hashedPassword, err := hashPassword(args.Password)
 	if err != nil {
-		u.logger.WithError(err).Error("Failed to parse signup payload")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return nil, err
 	}
 
-	err = u.usecase.CreateUser(r.Context(), args.Username, args.Password)
-	if err != nil {
-		u.logger.WithError(err).Error("Failed to create user")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	user := &models.User{
+		ID:       uuid.New(),
+		UserName: args.Username,
+		Password: hashedPassword,
 	}
 
-	w.WriteHeader(http.StatusOK)
-	u.logger.Info("User created successfully")
+	err = u.dal.User.UpsertUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return &messages.BaseResponse{Code: http.StatusOK}, nil
 }
 
-func writeResponse(data interface{}, w http.ResponseWriter) {
-	bytes, _ := json.Marshal(data)
-	w.WriteHeader(http.StatusOK)
-	w.Write(bytes)
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
 }

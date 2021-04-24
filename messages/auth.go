@@ -6,5 +6,6 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
+	BaseResponse
 	AccessToken string `json:"token"`
 }
