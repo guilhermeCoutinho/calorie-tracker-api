@@ -8,30 +8,29 @@ import (
 func init() {
 	up := func(db orm.DB) error {
 		_, err := db.Exec(`
-
-		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-		CREATE TABLE IF NOT EXISTS users (
+		CREATE TABLE IF NOT EXISTS meals (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-			user_name VARCHAR NOT NULL,
-			password VARCHAR NOT NULL,
-			access_token VARCHAR,
+			user_id UUID REFERENCES users (id),
+			meal VARCHAR NOT NULL,
+			calories INTEGER NOT NULL,
+			DATE TIMESTAMP,
+			above_limit BOOL,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 			updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 		  );
 		  
-		  CREATE UNIQUE INDEX IF NOT EXISTS users_access_tokens ON users (access_token);
-		  CREATE UNIQUE INDEX IF NOT EXISTS user_name ON users (user_name);
+		  CREATE INDEX IF NOT EXISTS user_id ON meals (user_id);
 		`)
 		return err
 	}
 
 	down := func(db orm.DB) error {
-		_, err := db.Exec("DROP TABLE users;")
+		_, err := db.Exec("drop table meals;")
 		return err
 	}
 
 	opts := migrations.MigrationOptions{}
-	migrations.Register("20210420020046_create_users_table", up, down, opts)
+
+	migrations.Register("20210424170501_create_meals_table", up, down, opts)
 }

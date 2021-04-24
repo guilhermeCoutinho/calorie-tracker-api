@@ -61,13 +61,15 @@ func (a *App) buildRoutes(usecase *usecase.Usecase) (*mux.Router, error) {
 
 	healthCheckController := controller.NewHealthcheck(a.logger)
 	userController := controller.NewUser(a.logger, usecase)
-	authController := controller.NewAuth(usecase, a.logger)
-
-	authRouter.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
+	authController := controller.NewAuth(a.logger, usecase)
+	mealController := controller.NewMeal(a.logger, usecase)
 
 	r.HandleFunc("/users", userController.Create).Methods("POST")
-	//r.HandleFunc("/users", userController.Login).Methods("GET")
-	r.HandleFunc("/auth", authController.Login).Methods("GET")
+	r.HandleFunc("/auth", authController.Login).Methods("POST")
+
+	authRouter.HandleFunc("/healthcheck", healthCheckController.HealthCheck).Methods("GET")
+	authRouter.HandleFunc("/meals", mealController.Create).Methods("POST")
+
 	return r, nil
 }
 

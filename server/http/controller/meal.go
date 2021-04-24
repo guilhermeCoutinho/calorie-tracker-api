@@ -3,9 +3,8 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"github.com/google/uuid"
+	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/usecase"
 	"github.com/sirupsen/logrus"
 )
@@ -25,28 +24,26 @@ func NewMeal(
 	}
 }
 
-type CreateMealRequest struct {
-	Text     string    `json:"text"`
-	Calories int       `json:"calories"`
-	Time     time.Time `json:"time"`
-}
-
 func (u *Meal) Create(w http.ResponseWriter, r *http.Request) {
-	args := &CreateMealRequest{}
+	logger := u.logger.WithFields(logrus.Fields{
+		"methodName": "createMeal",
+	})
+
+	args := &messages.CreateMealRequest{}
 	err := json.NewDecoder(r.Body).Decode(args)
 	if err != nil {
-		u.logger.WithError(err).Error("Failed to parse signup payload")
+		logger.WithError(err).Error("Failed to parse payload")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = u.usecase.CreateMeal(r.Context(), uuid.New(), "", -1)
+	err = u.usecase.CreateMeal(r.Context(), args)
 	if err != nil {
-		u.logger.WithError(err).Error("Failed to create user")
+		logger.WithError(err).Error("Failed to create meal")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	u.logger.Info("User created successfully")
+	logger.Info("Meal created successfully")
 }

@@ -17,7 +17,6 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var token string
 
-		// format: Authorization: Bearer
 		tokens, ok := r.Header["Authorization"]
 		if ok && len(tokens) >= 1 {
 			token = tokens[0]
