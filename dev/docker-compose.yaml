@@ -15,11 +15,3 @@ services:
     container_name: calorie-tracker-redis
     ports:
       - 9001:6379
-
-  elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.12.0'
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"

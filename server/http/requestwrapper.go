@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,8 +32,9 @@ func (w *HTTPWrapper) Register(router *mux.Router, path string, handler interfac
 	for i := 0; i < handlerType.NumMethod(); i++ {
 		method := handlerType.Method(i)
 		verb, ok := w.getHTTPVerb(method)
+
 		if fitsHandlerTemplate(method) && ok {
-			w.logger.Infof("Registered %s into %s/%s", method.Name, path, verb)
+			w.logger.Infof("Registered %s %s %s.%s", verb, path, handlerType, method.Name)
 			router.HandleFunc(path, w.wrapHTTPRequest(reflect.ValueOf(handler), method)).Methods(verb)
 		}
 	}
@@ -50,6 +52,7 @@ func (w *HTTPWrapper) getHTTPVerb(method reflect.Method) (string, bool) {
 func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Method) func(w http.ResponseWriter, r *http.Request) {
 	return func(writter http.ResponseWriter, r *http.Request) {
 		logger := w.logger.WithFields(logrus.Fields{
+			"handler":    handler.Type(),
 			"methodName": method.Name,
 		})
 
@@ -69,20 +72,21 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 		}
 
 		ctx := r.Context()
+		ctx = context.WithValue(ctx, models.LoggerCtxKey, logger)
 		args := instance.Addr().Interface()
 		responseSlice := method.Func.Call([]reflect.Value{
 			handler, reflect.ValueOf(ctx), reflect.ValueOf(args),
 		})
 
-		handlerResult, handlerErr := responseSlice[0].Interface(), responseSlice[1].Interface().(error)
+		handlerResult, handlerErr := responseSlice[0], responseSlice[1]
 
-		if handlerErr != nil {
-			logger.WithError(handlerErr).Error("Handler returned error")
+		if !handlerErr.IsNil() {
+			logger.WithError(handlerErr.Interface().(error)).Error("Handler returned error")
 			writter.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		bytes, err := json.Marshal(handlerResult)
+		bytes, err := json.Marshal(handlerResult.Interface())
 		if err != nil {
 			logger.WithError(err).Error("Could not unmarshall handler response")
 			writter.WriteHeader(http.StatusInternalServerError)
@@ -91,7 +95,6 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 
 		writter.WriteHeader(http.StatusOK)
 		writter.Write(bytes)
-		logger.Info("finished processing request")
 	}
 }
 

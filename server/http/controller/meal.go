@@ -28,7 +28,7 @@ func NewMeal(
 	}
 }
 
-func (m *Meal) PostMeal(ctx context.Context, args *messages.CreateMealRequest) (*messages.BaseResponse, error) {
+func (m *Meal) Post(ctx context.Context, args *messages.CreateMealRequest) (*messages.BaseResponse, error) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, err

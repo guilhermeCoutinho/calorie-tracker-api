@@ -27,7 +27,7 @@ func NewUser(
 	}
 }
 
-func (u *User) PostUser(ctx context.Context, args *messages.CreateUserRequest) (*messages.BaseResponse, error) {
+func (u *User) Post(ctx context.Context, args *messages.CreateUserRequest) (*messages.BaseResponse, error) {
 	hashedPassword, err := hashPassword(args.Password)
 	if err != nil {
 		return nil, err

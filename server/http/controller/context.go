@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/sirupsen/logrus"
 )
 
 const ctxKey = "ctxKey"
@@ -25,4 +28,8 @@ func ClaimsFromCtx(ctx context.Context) (*Claims, error) {
 	}
 
 	return &claim, nil
+}
+
+func LoggerFromCtx(ctx context.Context) logrus.FieldLogger {
+	return ctx.Value(models.LoggerCtxKey).(logrus.FieldLogger)
 }

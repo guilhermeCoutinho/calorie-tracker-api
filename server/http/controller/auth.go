@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -42,8 +43,7 @@ func NewAuth(
 	}
 }
 
-func (a *Auth) PostLogin(ctx context.Context, args *messages.LoginRequest) (*messages.LoginResponse, error) {
-	fmt.Println("Post login called")
+func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest) (*messages.LoginResponse, error) {
 	user, err := a.dal.User.GetUser(ctx, args.Username)
 	if err != nil {
 		return nil, err
@@ -61,6 +61,9 @@ func (a *Auth) PostLogin(ctx context.Context, args *messages.LoginRequest) (*mes
 
 	response := &messages.LoginResponse{
 		AccessToken: token,
+		BaseResponse: messages.BaseResponse{
+			Code: http.StatusOK,
+		},
 	}
 	return response, nil
 }
