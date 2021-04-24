@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/sirupsen/logrus"
 )
+
+const LoggerCtxKey = "loggerCtxKey"
 
 type HTTPWrapper struct {
 	logger          logrus.FieldLogger
@@ -22,7 +23,7 @@ func NewHTTPWrapper(
 ) *HTTPWrapper {
 	httpWrapper := &HTTPWrapper{
 		logger:          logger,
-		PossibleMethods: []string{"GET", "POST"},
+		PossibleMethods: []string{"GET", "POST", "PATCH", "PUT", "DELETE"},
 	}
 	return httpWrapper
 }
@@ -72,7 +73,7 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 		}
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, models.LoggerCtxKey, logger)
+		ctx = context.WithValue(ctx, LoggerCtxKey, logger)
 		args := instance.Addr().Interface()
 		responseSlice := method.Func.Call([]reflect.Value{
 			handler, reflect.ValueOf(ctx), reflect.ValueOf(args),
@@ -98,18 +99,14 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 	}
 }
 
-type HandlerTemplate struct {
-}
+type HandlerTemplate struct{}
 
-func (handlerTemplate *HandlerTemplate) PitayaRequestTemplate(ctx context.Context, pointer *struct{}) (*struct{}, error) {
+func (handlerTemplate *HandlerTemplate) RequestTemplate(ctx context.Context, pointer *struct{}) (*struct{}, error) {
 	return nil, nil
 }
 
 func fitsHandlerTemplate(method reflect.Method) bool {
-	template, ok := reflect.TypeOf(&HandlerTemplate{}).MethodByName("PitayaRequestTemplate")
-	if !ok {
-		return false
-	}
+	template := reflect.TypeOf(&HandlerTemplate{}).Method(0)
 
 	if method.Type.NumIn() != template.Type.NumIn() || method.Type.NumOut() != template.Type.NumOut() {
 		return false
