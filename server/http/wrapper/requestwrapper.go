@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/sirupsen/logrus"
 )
 
@@ -58,31 +59,10 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 			"methodName": method.Name,
 		})
 
-		payloadType := method.Type.In(2)
-		payload := instantiate(payloadType)
-
-		varsType := method.Type.In(3)
-		varsValue := instantiate(varsType)
-
-		err := json.NewDecoder(r.Body).Decode(payload.Addr().Interface())
-		switch {
-		case err == io.EOF:
-			// empty body, do nothing
-		case err != nil:
-			logger.WithError(err).Error("Failed to parse payload")
-			writter.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		muxVars := mux.Vars(r)
-		if len(muxVars) > 0 {
-			marshalledVars, _ := json.Marshal(mux.Vars(r))
-			json.Unmarshal(marshalledVars, varsValue.Addr().Interface())
-			if err != nil {
-				logger.WithError(err).Error("Failed to parse vars from ur")
-				writter.WriteHeader(http.StatusBadRequest)
-				return
-			}
+		payload, varsValue, err := unmarshallArgsAndVars(method, r)
+		if err != nil {
+			logger.WithError(err).Error("Failed to unmarshall request")
+			writter.WriteHeader(http.StatusInternalServerError)
 		}
 
 		ctx := r.Context()
@@ -95,10 +75,8 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 		})
 
 		handlerResult, handlerErr := responseSlice[0], responseSlice[1]
-
 		if !handlerErr.IsNil() {
-			logger.WithError(handlerErr.Interface().(error)).Error("Handler returned error")
-			writter.WriteHeader(http.StatusInternalServerError)
+			writeErr(writter, logger, handlerErr)
 			return
 		}
 
@@ -113,6 +91,50 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 		writter.Write(bytes)
 		logger.Debug("Request processed")
 	}
+}
+
+func unmarshallArgsAndVars(method reflect.Method, r *http.Request) (reflect.Value, reflect.Value, error) {
+	defer r.Body.Close()
+
+	payloadType := method.Type.In(2)
+	payload := instantiate(payloadType)
+
+	varsType := method.Type.In(3)
+	varsValue := instantiate(varsType)
+
+	err := json.NewDecoder(r.Body).Decode(payload.Addr().Interface())
+	switch {
+	case err == io.EOF:
+		// empty body, do nothing
+	case err != nil:
+		return payload, varsValue, err
+	}
+
+	muxVars := mux.Vars(r)
+	if len(muxVars) > 0 {
+		marshalledVars, _ := json.Marshal(mux.Vars(r))
+		json.Unmarshal(marshalledVars, varsValue.Addr().Interface())
+		if err != nil {
+			return payload, varsValue, err
+		}
+	}
+	return payload, varsValue, nil
+}
+
+func writeErr(writter http.ResponseWriter, logger logrus.FieldLogger, handlerErr reflect.Value) {
+	errMsg := handlerErr.Interface().(error).Error()
+	bytes, err := json.Marshal(&messages.BaseResponse{
+		Msg:  errMsg,
+		Code: http.StatusInternalServerError,
+	})
+
+	if err != nil {
+		writter.WriteHeader(http.StatusInternalServerError)
+	}
+
+	logger.WithError(handlerErr.Interface().(error)).Error("Handler returned error")
+	writter.WriteHeader(http.StatusInternalServerError)
+	writter.Write(bytes)
 }
 
 func instantiate(instanceType reflect.Type) reflect.Value {
