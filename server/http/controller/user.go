@@ -46,6 +46,23 @@ func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *
 	return &messages.BaseResponse{Code: http.StatusOK}, nil
 }
 
+func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messages.GetUsersResponse, error) {
+	claims, err := ClaimsFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := u.dal.User.GetUserByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &messages.GetUsersResponse{
+		Users:        user,
+		BaseResponse: messages.BaseResponse{Code: http.StatusOK},
+	}, nil
+}
+
 func updateUser(user *models.User, args *messages.UpdateUserRequest) {
 	if args.CalorieLimit != nil {
 		user.CalorieLimit = *args.CalorieLimit
