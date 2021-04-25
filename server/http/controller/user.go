@@ -4,12 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/spf13/viper"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -27,30 +25,32 @@ func NewUser(
 	}
 }
 
-func (u *User) Post(ctx context.Context, args *messages.CreateUserRequest, vars *struct{}) (*messages.BaseResponse, error) {
-	hashedPassword, err := hashPassword(args.Password)
+func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *struct{}) (*messages.BaseResponse, error) {
+	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	user := &models.User{
-		ID:       uuid.New(),
-		UserName: args.Username,
-		Password: hashedPassword,
+	user, err := u.dal.User.GetUserByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
 	}
+
+	updateUser(user, args)
 
 	err = u.dal.User.UpsertUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}
+
 	return &messages.BaseResponse{Code: http.StatusOK}, nil
 }
 
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	if err != nil {
-		return "", err
+func updateUser(user *models.User, args *messages.UpdateUserRequest) {
+	if args.CalorieLimit != nil {
+		user.CalorieLimit = *args.CalorieLimit
 	}
-
-	return string(bytes), nil
+	if args.Username != nil {
+		user.UserName = *args.Username
+	}
 }

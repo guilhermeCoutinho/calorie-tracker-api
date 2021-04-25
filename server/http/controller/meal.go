@@ -28,11 +28,7 @@ func NewMeal(
 	}
 }
 
-type Vars struct {
-	UserID string `json:"userID"`
-}
-
-func (m *Meal) Post(ctx context.Context, args *messages.CreateMealRequest, vars *Vars) (*messages.BaseResponse, error) {
+func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.BaseResponse, error) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -71,7 +67,36 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealRequest, vars 
 	return &messages.BaseResponse{Code: http.StatusOK}, nil
 }
 
-func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealRequest) (*models.Meal, error) {
+func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *messages.GetMealsVars) (*messages.GetMealsResponse, error) {
+	claims, err := ClaimsFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userID := uuid.Nil
+	if vars.UserID == "me" {
+		userID = claims.UserID
+	} else {
+		userID, err = uuid.Parse(vars.UserID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	meals, err := m.dal.Meal.GetMeals(ctx, userID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return &messages.GetMealsResponse{
+		BaseResponse: messages.BaseResponse{
+			Code: http.StatusOK,
+		},
+		Meals: meals,
+	}, nil
+}
+
+func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload) (*models.Meal, error) {
 	mealDate, err := time.Parse("2006-Jan-01", req.Date)
 	if err != nil {
 		return nil, err

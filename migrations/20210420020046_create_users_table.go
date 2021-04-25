@@ -16,6 +16,7 @@ func init() {
 			user_name VARCHAR NOT NULL,
 			password VARCHAR NOT NULL,
 			access_token VARCHAR,
+			calorie_limit INTEGER NOT NULL DEFAULT 0,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 			updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()

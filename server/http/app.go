@@ -52,15 +52,17 @@ func (a *App) buildRoutes(dal *dal.DAL) {
 	authRouter.Use(authMiddleware.Authenticate)
 
 	healthCheckController := controller.NewHealthcheck()
+	userNoAuthController := controller.NewUserNoAuth(dal, a.config)
 	userController := controller.NewUser(dal, a.config)
 	authController := controller.NewAuth(dal, a.config)
 	mealController := controller.NewMeal(dal, a.config)
 
-	a.wrapper.Register(router, "/users", userController)
+	a.wrapper.Register(router, "/users", userNoAuthController)
 	a.wrapper.Register(router, "/auth", authController)
 	a.wrapper.Register(router, "/healthcheck", healthCheckController)
 
 	a.wrapper.Register(authRouter, "/users/{userID}/meals", mealController)
+	a.wrapper.Register(authRouter, "/users/{userID}", userController)
 
 	a.router = router
 }

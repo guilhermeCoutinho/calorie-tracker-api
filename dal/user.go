@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/spf13/viper"
 )
@@ -13,7 +14,7 @@ import (
 type UserDAL interface {
 	UpsertUser(ctx context.Context, user *models.User) error
 	GetUser(ctx context.Context, userName string) (*models.User, error)
-	GetUserByToken(ctx context.Context, token string) (*models.User, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
 }
 
 type User struct {
@@ -45,11 +46,11 @@ func (u *User) GetUser(
 	return u.getUser(ctx, "user_name", userName)
 }
 
-func (u *User) GetUserByToken(
+func (u *User) GetUserByID(
 	ctx context.Context,
-	token string,
+	userID uuid.UUID,
 ) (*models.User, error) {
-	return u.getUser(ctx, "access_token", token)
+	return u.getUser(ctx, "id", userID)
 }
 
 func (u *User) getUser(ctx context.Context, column string, value interface{}) (*models.User, error) {

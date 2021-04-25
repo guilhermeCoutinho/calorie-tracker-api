@@ -13,7 +13,7 @@ func init() {
 			user_id UUID REFERENCES users (id),
 			meal VARCHAR NOT NULL,
 			calories INTEGER NOT NULL,
-			DATE TIMESTAMP,
+			date TIMESTAMP,
 			above_limit BOOL,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
