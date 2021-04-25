@@ -8,6 +8,7 @@ import (
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
+	"github.com/guilhermeCoutinho/api-studies/services/calorieprovider"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -55,7 +56,7 @@ func (a *App) buildRoutes(dal *dal.DAL) {
 	userNoAuthController := controller.NewUserNoAuth(dal, a.config)
 	userController := controller.NewUser(dal, a.config)
 	authController := controller.NewAuth(dal, a.config)
-	mealController := controller.NewMeal(dal, a.config)
+	mealController := controller.NewMeal(dal, a.config, &calorieprovider.ProviderImpl{})
 
 	a.wrapper.Register(router, "/users", userNoAuthController)
 	a.wrapper.Register(router, "/auth", authController)

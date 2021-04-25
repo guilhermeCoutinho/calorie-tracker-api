@@ -4,7 +4,7 @@ import "github.com/guilhermeCoutinho/api-studies/models"
 
 type CreateMealPayload struct {
 	Meal     string `json:"meal"`
-	Calories int    `json:"calories"`
+	Calories *int   `json:"calories"`
 	Date     string `json:"date"`
 	Time     string `json:"time"`
 }

@@ -10,21 +10,25 @@ import (
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/services/calorieprovider"
 	"github.com/spf13/viper"
 )
 
 type Meal struct {
-	dal    *dal.DAL
-	config *viper.Viper
+	dal            *dal.DAL
+	config         *viper.Viper
+	calorieService calorieprovider.Provider
 }
 
 func NewMeal(
 	dal *dal.DAL,
 	config *viper.Viper,
+	calorieService calorieprovider.Provider,
 ) *Meal {
 	return &Meal{
-		dal:    dal,
-		config: config,
+		dal:            dal,
+		config:         config,
+		calorieService: calorieService,
 	}
 }
 
@@ -44,17 +48,17 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 		}
 	}
 
+	err = m.tryEnrichFromCaloriesAPI(args)
+	if err != nil {
+		return nil, err
+	}
+
 	meal, err := m.mealFromRequest(userID, args)
 	if err != nil {
 		return nil, err
 	}
 
 	err = m.validateNewMealEntry(meal)
-	if err != nil {
-		return nil, err
-	}
-
-	err = m.tryEnrichFromCaloriesAPI(meal)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +115,7 @@ func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload
 		ID:       uuid.New(),
 		UserID:   userID,
 		Meal:     req.Meal,
-		Calories: req.Calories,
+		Calories: *req.Calories,
 		Date:     mealDate.Add(mealTime),
 
 		CreatedAt: time.Now(),
@@ -137,18 +141,14 @@ func (m *Meal) validateNewMealEntry(meal *models.Meal) error {
 	return nil
 }
 
-func (m *Meal) tryEnrichFromCaloriesAPI(meal *models.Meal) error {
-	if meal.Calories == 0 {
-		fetchedCalories, err := m.fetchCaloriesFromProvider(meal.Meal)
+func (m *Meal) tryEnrichFromCaloriesAPI(meal *messages.CreateMealPayload) error {
+	if meal.Calories == nil {
+		fetchedCalories, err := m.calorieService.GetCalories(meal.Meal)
 		if err != nil {
 			return err
 		}
 
-		meal.Calories = fetchedCalories
+		meal.Calories = &fetchedCalories
 	}
 	return nil
-}
-
-func (m *Meal) fetchCaloriesFromProvider(text string) (int, error) {
-	return 99, nil
 }
