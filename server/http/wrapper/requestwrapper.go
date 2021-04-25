@@ -113,7 +113,7 @@ func unmarshallArgsAndVars(method reflect.Method, r *http.Request) (reflect.Valu
 
 	muxVars := mux.Vars(r)
 	if len(muxVars) > 0 {
-		marshalledVars, _ := json.Marshal(mux.Vars(r))
+		marshalledVars, err := json.Marshal(mux.Vars(r))
 		json.Unmarshal(marshalledVars, varsValue.Addr().Interface())
 		if err != nil {
 			return payload, varsValue, err
