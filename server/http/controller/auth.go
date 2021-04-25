@@ -44,7 +44,7 @@ func NewAuth(
 }
 
 func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest, vars *struct{}) (*messages.LoginResponse, error) {
-	user, err := a.dal.User.GetUser(ctx, args.Username)
+	user, err := a.dal.User.GetUser(ctx, args.Username, nil)
 	if err != nil {
 		return nil, err
 	}

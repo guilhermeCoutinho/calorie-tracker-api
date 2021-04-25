@@ -2,14 +2,17 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/guilhermeCoutinho/api-studies/services/calorieprovider"
 	"github.com/spf13/viper"
 )
@@ -32,7 +35,7 @@ func NewMeal(
 	}
 }
 
-func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.BaseResponse, error) {
+func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.CreateMealResponse, error) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, err
@@ -68,7 +71,10 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 		return nil, err
 	}
 
-	return &messages.BaseResponse{Code: http.StatusOK}, nil
+	return &messages.CreateMealResponse{
+		BaseResponse: messages.BaseResponse{Code: http.StatusOK},
+		Meals:        meal,
+	}, nil
 }
 
 func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *messages.GetMealsVars) (*messages.GetMealsResponse, error) {
@@ -87,7 +93,7 @@ func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *m
 		}
 	}
 
-	meals, err := m.dal.Meal.GetMeals(ctx, userID, "")
+	meals, err := m.dal.Meal.GetMeals(ctx, userID, getQueryOptions(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +104,17 @@ func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *m
 		},
 		Meals: meals,
 	}, nil
+}
+
+func getQueryOptions(ctx context.Context) *dal.QueryOptions {
+	params := ctx.Value(wrapper.URLParamsCtxKey).(url.Values)
+	options := &dal.QueryOptions{}
+
+	if val, ok := params["pagination"]; ok {
+		options.Pagination = &dal.Pagination{}
+		json.Unmarshal([]byte(val[0]), options.Pagination)
+	}
+	return options
 }
 
 func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload) (*models.Meal, error) {

@@ -14,6 +14,7 @@ import (
 )
 
 const LoggerCtxKey = "loggerCtxKey"
+const URLParamsCtxKey = "urlParamsCtxKey"
 
 type HTTPWrapper struct {
 	logger          logrus.FieldLogger
@@ -68,6 +69,7 @@ func (w *HTTPWrapper) wrapHTTPRequest(handler reflect.Value, method reflect.Meth
 
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, LoggerCtxKey, logger)
+		ctx = context.WithValue(ctx, URLParamsCtxKey, r.URL.Query())
 		args := payload.Addr().Interface()
 		vars := varsValue.Addr().Interface()
 

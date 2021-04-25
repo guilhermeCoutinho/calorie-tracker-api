@@ -13,9 +13,14 @@ type CreateMealVars struct {
 	UserID string `json:"userID"`
 }
 
+type CreateMealResponse struct {
+	BaseResponse
+	Meals *models.Meal `json:"meal"`
+}
+
 type GetMealsVars struct {
-	UserID string `json:"userID"`
-	Filter string `json:"filter"` //(date eq '2016-05-01') AND ((number_of_calories gt 20) OR (number_of_calories lt 10))
+	UserID     string `json:"userID"`
+	Pagination string `json:"pagination"`
 }
 
 type GetMealsResponse struct {

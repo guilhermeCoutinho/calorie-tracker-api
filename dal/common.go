@@ -25,6 +25,14 @@ func NewDAL(
 	}
 }
 
+type QueryOptions struct {
+	Pagination *Pagination
+}
+type Pagination struct {
+	Limit  int
+	Offset int
+}
+
 func upsertAllFields(q *orm.Query, v interface{}) error {
 	val := reflect.ValueOf(v).Elem()
 

@@ -31,7 +31,7 @@ func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *
 		return nil, err
 	}
 
-	user, err := u.dal.User.GetUserByID(ctx, claims.UserID)
+	user, err := u.dal.User.GetUserByID(ctx, claims.UserID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messag
 		return nil, err
 	}
 
-	user, err := u.dal.User.GetUserByID(ctx, claims.UserID)
+	user, err := u.dal.User.GetUserByID(ctx, claims.UserID, getQueryOptions(ctx))
 	if err != nil {
 		return nil, err
 	}
