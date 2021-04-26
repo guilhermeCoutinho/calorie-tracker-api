@@ -41,7 +41,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			"accessLevel": claims.AccessLevel,
 		})
 
-		logger.Info("User authorized")
+		logger.Debug("User authorized")
 		r = r.WithContext(controller.ClaimsToCtx(r.Context(), claims))
 		next.ServeHTTP(w, r)
 	})

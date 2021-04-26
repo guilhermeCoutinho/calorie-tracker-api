@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
 	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/spf13/viper"
@@ -71,14 +70,4 @@ func (u *User) getUser(
 		return nil, err
 	}
 	return user, nil
-}
-
-func addQueryOptions(query *orm.Query, options *QueryOptions) *orm.Query {
-	if options == nil {
-		return query
-	}
-	if options.Pagination != nil {
-		query = query.Limit(options.Pagination.Limit).Offset(options.Pagination.Offset)
-	}
-	return query
 }

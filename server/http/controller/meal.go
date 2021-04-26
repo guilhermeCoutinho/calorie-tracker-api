@@ -2,17 +2,14 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
-	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/guilhermeCoutinho/api-studies/services/calorieprovider"
 	"github.com/spf13/viper"
 )
@@ -104,17 +101,6 @@ func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *m
 		},
 		Meals: meals,
 	}, nil
-}
-
-func getQueryOptions(ctx context.Context) *dal.QueryOptions {
-	params := ctx.Value(wrapper.URLParamsCtxKey).(url.Values)
-	options := &dal.QueryOptions{}
-
-	if val, ok := params["pagination"]; ok {
-		options.Pagination = &dal.Pagination{}
-		json.Unmarshal([]byte(val[0]), options.Pagination)
-	}
-	return options
 }
 
 func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload) (*models.Meal, error) {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
+	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/sirupsen/logrus"
 )
@@ -32,4 +34,27 @@ func ClaimsFromCtx(ctx context.Context) (*Claims, error) {
 
 func LoggerFromCtx(ctx context.Context) logrus.FieldLogger {
 	return ctx.Value(wrapper.LoggerCtxKey).(logrus.FieldLogger)
+}
+
+func getQueryOptions(ctx context.Context) *dal.QueryOptions {
+	params := ctx.Value(wrapper.URLParamsCtxKey).(url.Values)
+	options := &dal.QueryOptions{}
+
+	if val, ok := params["pagination"]; ok {
+		options.Pagination = &dal.Pagination{}
+		json.Unmarshal([]byte(val[0]), options.Pagination)
+	}
+
+	if val, ok := params["sorting"]; ok {
+		options.Sorting = &dal.Sorting{}
+		json.Unmarshal([]byte(val[0]), options.Sorting)
+	}
+
+	if val, ok := params["filtering"]; ok {
+		options.Filtering = &dal.Filtering{
+			Filter: val[0],
+		}
+	}
+
+	return options
 }

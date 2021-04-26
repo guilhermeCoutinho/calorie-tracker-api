@@ -8,7 +8,7 @@ import (
 
 //User is the model that governs all notes objects retrived or inserted into the DB
 type User struct {
-	ID           uuid.UUID `json:"-" pg:"id, pk"`
+	ID           uuid.UUID `json:"-" pg:"id, pk" sortable:"true"`
 	UserName     string    `json:"userName" pg:"user_name,notnull"`
 	Password     string    `json:"-" pg:"password,notnull"`
 	CalorieLimit int       `json:"caloriesLimit" pg:"calorie_limit, notnull"`
