@@ -32,6 +32,9 @@ func NewMeal(
 	}
 }
 
+// EXP	: (EXP)
+// 		| EXP (OR/AND) EXP
+//		| columnName op value
 func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.CreateMealResponse, error) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
@@ -104,7 +107,7 @@ func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *m
 }
 
 func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload) (*models.Meal, error) {
-	mealDate, err := time.Parse("2006-Jan-01", req.Date)
+	mealDate, err := time.Parse("2006-Jan-02", req.Date)
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +118,12 @@ func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload
 	}
 
 	meal := &models.Meal{
-		ID:       uuid.New(),
-		UserID:   userID,
-		Meal:     req.Meal,
-		Calories: *req.Calories,
-		Date:     mealDate.Add(mealTime),
+		ID:          uuid.New(),
+		UserID:      userID,
+		Meal:        req.Meal,
+		Calories:    *req.Calories,
+		Date:        mealDate,
+		TimeSeconds: int64(mealTime.Seconds()),
 
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
