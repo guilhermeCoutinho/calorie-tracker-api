@@ -14,6 +14,8 @@ func init() {
 			meal,
 			calories,
 			date,
+			time_seconds,
+			total_calories_for_day,
 			above_limit,
 			created_at,
 			updated_at
@@ -24,7 +26,9 @@ func init() {
 			meal,
 			calories,
 			date,
-			(SELECT (CASE WHEN sum > calorie_limit THEN TRUE ELSE FALSE END) AS above_limit FROM (select p.sum, q.calorie_limit FROM (SELECT sum(calories) AS sum FROM meals WHERE meals.user_id=user_id) AS p, (select calorie_limit as calorie_limit from users WHERE id=user_id) AS q) AS r),
+			time_seconds,
+			(SELECT sum(calories) AS sum FROM meals meals_1 WHERE meals_1.user_id=meals.user_id AND meals_1.date=meals.date),
+			(SELECT (CASE WHEN sum > calorie_limit THEN TRUE ELSE FALSE END) AS above_limit FROM (select p.sum, q.calorie_limit FROM (SELECT sum(calories) AS sum FROM meals meals_1 WHERE meals_1.user_id=meals.user_id AND meals_1.date=meals.date) AS p, (select calorie_limit as calorie_limit from users WHERE id=user_id) AS q) AS r),
 			created_at,
 			updated_at
 		from meals;
