@@ -65,7 +65,11 @@ func (u *User) getUser(
 	condition := fmt.Sprintf("%s=?", column)
 
 	partialQuery := u.db.Model(user).Where(condition, value)
-	err := addQueryOptions(partialQuery, options).Select()
+	partialQuery, err := addQueryOptions(partialQuery, options)
+	if err != nil {
+		return nil, err
+	}
+	err = partialQuery.Select()
 	if err != nil {
 		return nil, err
 	}

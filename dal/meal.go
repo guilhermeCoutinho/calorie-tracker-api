@@ -41,7 +41,11 @@ func (u *Meal) GetMeals(ctx context.Context, userID uuid.UUID, options *QueryOpt
 	var meals []*models.MealWithLimit
 	partialQuery := u.db.Model(&meals).Where("user_id=?", userID.String())
 
-	err := addQueryOptions(partialQuery, options).Select()
+	partialQuery, err := addQueryOptions(partialQuery, options)
+	if err != nil {
+		return nil, err
+	}
+	err = partialQuery.Select()
 	if err != nil {
 		return nil, err
 	}
