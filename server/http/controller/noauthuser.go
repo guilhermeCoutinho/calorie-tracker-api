@@ -8,6 +8,7 @@ import (
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,10 +28,10 @@ func NewUserNoAuth(
 	}
 }
 
-func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest, vars *struct{}) (*messages.BaseResponse, error) {
+func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest, vars *struct{}) (*messages.BaseResponse, *wrapper.HandlerError) {
 	hashedPassword, err := hashPassword(args.Password)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	user := &models.User{
@@ -42,7 +43,7 @@ func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest,
 
 	err = u.dal.User.UpsertUser(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 	return &messages.BaseResponse{Code: http.StatusOK}, nil
 }

@@ -9,9 +9,13 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/sirupsen/logrus"
 )
+
+type HandlerError struct {
+	Err        error
+	StatusCode int
+}
 
 const LoggerCtxKey = "loggerCtxKey"
 const URLParamsCtxKey = "urlParamsCtxKey"
@@ -124,20 +128,11 @@ func unmarshallArgsAndVars(method reflect.Method, r *http.Request) (reflect.Valu
 	return payload, varsValue, nil
 }
 
-func writeErr(writter http.ResponseWriter, logger logrus.FieldLogger, handlerErr reflect.Value) {
-	errMsg := handlerErr.Interface().(error).Error()
-	bytes, err := json.Marshal(&messages.BaseResponse{
-		Msg:  errMsg,
-		Code: http.StatusInternalServerError,
-	})
+func writeErr(writter http.ResponseWriter, logger logrus.FieldLogger, handlerErrVal reflect.Value) {
+	handlerEr := handlerErrVal.Elem().Interface().(HandlerError)
 
-	if err != nil {
-		writter.WriteHeader(http.StatusInternalServerError)
-	}
-
-	logger.WithError(handlerErr.Interface().(error)).Error("Handler returned error")
-	writter.WriteHeader(http.StatusInternalServerError)
-	writter.Write(bytes)
+	logger.WithError(handlerEr.Err).Error("Handler returned error")
+	writter.WriteHeader(handlerEr.StatusCode)
 }
 
 func instantiate(instanceType reflect.Type) reflect.Value {
@@ -152,7 +147,7 @@ func instantiate(instanceType reflect.Type) reflect.Value {
 
 type HandlerTemplate struct{}
 
-func (handlerTemplate *HandlerTemplate) RequestTemplate(ctx context.Context, pointer *struct{}, routeVars *struct{}) (*struct{}, error) {
+func (handlerTemplate *HandlerTemplate) RequestTemplate(ctx context.Context, pointer *struct{}, routeVars *struct{}) (*struct{}, *HandlerError) {
 	return nil, nil
 }
 

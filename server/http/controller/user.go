@@ -2,11 +2,13 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/spf13/viper"
 )
 
@@ -25,36 +27,39 @@ func NewUser(
 	}
 }
 
-func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *struct{}) (*messages.BaseResponse, error) {
+func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *struct{}) (*messages.BaseResponse, *wrapper.HandlerError) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	user, err := u.dal.User.GetUserByID(ctx, claims.UserID, nil)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}
 
-	updateUser(user, args)
+	err = updateUser(user, args, claims.AccessLevel)
+	if err != nil {
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
+	}
 
 	err = u.dal.User.UpsertUser(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	return &messages.BaseResponse{Code: http.StatusOK}, nil
 }
 
-func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messages.GetUsersResponse, error) {
+func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messages.GetUsersResponse, *wrapper.HandlerError) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	user, err := u.dal.User.GetUserByID(ctx, claims.UserID, getQueryOptions(ctx))
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}
 
 	return &messages.GetUsersResponse{
@@ -63,11 +68,18 @@ func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messag
 	}, nil
 }
 
-func updateUser(user *models.User, args *messages.UpdateUserRequest) {
+func updateUser(user *models.User, args *messages.UpdateUserRequest, accessLevel AccessLevel) error {
 	if args.CalorieLimit != nil {
 		user.CalorieLimit = *args.CalorieLimit
 	}
 	if args.Username != nil {
 		user.UserName = *args.Username
 	}
+
+	if args.AccessLevel != nil {
+		if accessLevel != Admin {
+			return fmt.Errorf("only admin can change access level")
+		}
+	}
+	return nil
 }

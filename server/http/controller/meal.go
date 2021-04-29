@@ -10,6 +10,7 @@ import (
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/guilhermeCoutinho/api-studies/services/calorieprovider"
 	"github.com/spf13/viper"
 )
@@ -32,13 +33,10 @@ func NewMeal(
 	}
 }
 
-// EXP	: (EXP)
-// 		| EXP (OR/AND) EXP
-//		| columnName op value
-func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.CreateMealResponse, error) {
+func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.CreateMealResponse, *wrapper.HandlerError) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	userID := uuid.Nil
@@ -47,28 +45,28 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 	} else {
 		userID, err = uuid.Parse(vars.UserID)
 		if err != nil {
-			return nil, err
+			return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 		}
 	}
 
 	err = m.tryEnrichFromCaloriesAPI(args)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	meal, err := m.mealFromRequest(userID, args)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 	}
 
 	err = m.validateNewMealEntry(meal)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 	}
 
 	err = m.dal.Meal.UpsertMeal(ctx, meal)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	return &messages.CreateMealResponse{
@@ -77,10 +75,10 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 	}, nil
 }
 
-func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *messages.GetMealsVars) (*messages.GetMealsResponse, error) {
+func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *messages.GetMealsVars) (*messages.GetMealsResponse, *wrapper.HandlerError) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	userID := uuid.Nil
@@ -89,13 +87,13 @@ func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *m
 	} else {
 		userID, err = uuid.Parse(vars.UserID)
 		if err != nil {
-			return nil, err
+			return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 		}
 	}
 
 	meals, err := m.dal.Meal.GetMeals(ctx, userID, getQueryOptions(ctx))
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
 	return &messages.GetMealsResponse{
