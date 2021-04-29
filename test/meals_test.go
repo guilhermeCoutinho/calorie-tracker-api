@@ -84,7 +84,7 @@ func TestMealsBelowLimit(t *testing.T) {
 		createMealRequest := &messages.CreateMealPayload{
 			Meal:     "hamburguer",
 			Calories: &calories,
-			Date:     fmt.Sprintf("2021-Jan-0%d", i),
+			Date:     fmt.Sprintf("2021-Jan-0%d", i+1),
 			Time:     "12h",
 		}
 
