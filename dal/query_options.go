@@ -1,7 +1,6 @@
 package dal
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -49,9 +48,6 @@ func addQueryOptions(query *orm.Query, options *QueryOptions) (*orm.Query, error
 	if options.Pagination != nil {
 		query = query.Limit(options.Pagination.Limit).Offset(options.Pagination.Offset)
 	}
-
-	debug, _ := json.Marshal(options)
-	fmt.Println(string(debug))
 
 	if options.Sorting != nil {
 		query = query.Order(fmt.Sprintf("%s %s", options.Sorting.SortBy, options.Sorting.Mode))
