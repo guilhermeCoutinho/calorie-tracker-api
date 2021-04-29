@@ -15,14 +15,13 @@ func init() {
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			user_name VARCHAR NOT NULL,
 			password VARCHAR NOT NULL,
-			access_token VARCHAR,
+			access_level VARCHAR,
 			calorie_limit INTEGER NOT NULL DEFAULT 0,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 			updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 		  );
 		  
-		  CREATE UNIQUE INDEX IF NOT EXISTS users_access_tokens ON users (access_token);
 		  CREATE UNIQUE INDEX IF NOT EXISTS user_name ON users (user_name);
 		`)
 		return err

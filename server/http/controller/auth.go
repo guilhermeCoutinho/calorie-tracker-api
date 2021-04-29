@@ -11,11 +11,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var encryptionKey = []byte("659B832C2A8581A8F3429C931A00208E")
+
+type AccessLevel string
+
+const (
+	Admin       AccessLevel = "Admin"
+	Manager     AccessLevel = "Manager"
+	RegulerUser AccessLevel = "RegularUser"
+)
 
 const (
 	userIDClaim      = "userId"
@@ -25,7 +34,7 @@ const (
 
 type Claims struct {
 	UserID      uuid.UUID
-	AccessLevel string
+	AccessLevel AccessLevel
 }
 
 type Auth struct {
@@ -43,20 +52,20 @@ func NewAuth(
 	}
 }
 
-func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest, vars *struct{}) (*messages.LoginResponse, error) {
+func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest, vars *struct{}) (*messages.LoginResponse, *wrapper.HandlerError) {
 	user, err := a.dal.User.GetUser(ctx, args.Username, nil)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}
 
 	err = verifyPassword(user.Password, args.Password)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
 
 	token, err := getToken(user.ID, time.Hour*1)
 	if err != nil {
-		return nil, err
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
 
 	response := &messages.LoginResponse{
@@ -72,7 +81,7 @@ func getToken(userID uuid.UUID, expiration time.Duration) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims[accessLevelClaim] = "admin"
+	claims[accessLevelClaim] = Admin
 	claims[userIDClaim] = userID
 	claims[expirationClaim] = time.Now().UTC().Add(expiration).Unix()
 
@@ -114,7 +123,7 @@ func (a *Auth) ClaimsFromToken(tokenStr string) (*Claims, error) {
 		return nil, err
 	}
 
-	accessLevel := claims[accessLevelClaim].(string)
+	accessLevel := claims[accessLevelClaim].(AccessLevel)
 
 	return &Claims{
 		UserID:      userID,

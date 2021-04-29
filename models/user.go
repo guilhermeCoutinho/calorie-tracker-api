@@ -12,6 +12,7 @@ type User struct {
 	UserName     string    `json:"userName" pg:"user_name,notnull"`
 	Password     string    `json:"-" pg:"password,notnull"`
 	CalorieLimit int       `json:"caloriesLimit" pg:"calorie_limit, notnull"`
+	AccessLevel  string    `json:"acessLevel" pg:"access_level"`
 
 	CreatedAt time.Time `json:"-" pg:"created_at,notnull"`
 	UpdatedAt time.Time `json:"-" pg:"updated_at,notnull"`
