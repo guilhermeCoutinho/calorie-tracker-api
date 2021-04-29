@@ -41,12 +41,12 @@ func getQueryOptions(ctx context.Context) *dal.QueryOptions {
 	options := &dal.QueryOptions{}
 
 	if val, ok := params["pagination"]; ok {
-		options.Pagination = &dal.Pagination{}
+		options.Pagination = dal.DefaultPagination()
 		json.Unmarshal([]byte(val[0]), options.Pagination)
 	}
 
 	if val, ok := params["sorting"]; ok {
-		options.Sorting = &dal.Sorting{}
+		options.Sorting = dal.DefaultSorting()
 		json.Unmarshal([]byte(val[0]), options.Sorting)
 	}
 
