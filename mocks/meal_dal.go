@@ -65,6 +65,20 @@ func (mr *MockMealDALMockRecorder) GetMeals(arg0, arg1, arg2, arg3 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeals", reflect.TypeOf((*MockMealDAL)(nil).GetMeals), arg0, arg1, arg2, arg3)
 }
 
+// InsertMeal mocks base method
+func (m *MockMealDAL) InsertMeal(arg0 context.Context, arg1 *models.Meal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertMeal", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertMeal indicates an expected call of InsertMeal
+func (mr *MockMealDALMockRecorder) InsertMeal(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMeal", reflect.TypeOf((*MockMealDAL)(nil).InsertMeal), arg0, arg1)
+}
+
 // UpsertMeal mocks base method
 func (m *MockMealDAL) UpsertMeal(arg0 context.Context, arg1 *models.Meal) error {
 	m.ctrl.T.Helper()

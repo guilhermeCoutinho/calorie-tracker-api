@@ -39,7 +39,7 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 	}
 
-	err = m.dal.Meal.UpsertMeal(ctx, meal)
+	err = m.dal.Meal.InsertMeal(ctx, meal)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}

@@ -12,6 +12,7 @@ import (
 )
 
 type MealDAL interface {
+	InsertMeal(ctx context.Context, meal *models.Meal) error
 	UpsertMeal(ctx context.Context, user *models.Meal) error
 	GetMeals(ctx context.Context, id *uuid.UUID, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
 	DeleteMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) error
@@ -30,6 +31,13 @@ func NewMeal(
 		config: config,
 		db:     db,
 	}
+}
+
+func (u *Meal) InsertMeal(ctx context.Context, meal *models.Meal) error {
+	meal.CreatedAt = time.Now()
+	meal.UpdatedAt = time.Now()
+	_, err := u.db.Model(meal).Insert()
+	return err
 }
 
 func (u *Meal) UpsertMeal(ctx context.Context, meal *models.Meal) error {
@@ -58,6 +66,10 @@ func (u *Meal) GetMeals(ctx context.Context, id *uuid.UUID, userID *uuid.UUID, o
 	err = partialQuery.Select()
 	if err != nil {
 		return nil, err
+	}
+
+	if meals == nil || len(meals) == 0 {
+		return nil, fmt.Errorf("no rows")
 	}
 
 	return meals, err
