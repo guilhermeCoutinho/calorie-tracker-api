@@ -43,7 +43,14 @@ func (u *User) InsertUser(ctx context.Context, user *models.User) error {
 
 func (u *User) UpsertUser(ctx context.Context, user *models.User, accessLevel models.AccessLevel) error {
 	user.UpdatedAt = time.Now()
-	_, err := u.db.Model(user).Where("access_level >= ?", accessLevel).Where("id = ?", user.ID).Update()
+	result, err := u.db.Model(user).Where("access_level >= ?", accessLevel).Where("id = ?", user.ID).Update()
+	if err != nil {
+		return err
+	}
+
+	if result == nil || result.RowsAffected() == 0 {
+		return fmt.Errorf("no rows")
+	}
 	return err
 }
 
