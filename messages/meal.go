@@ -29,3 +29,7 @@ type RouteVars struct {
 type GetMealsResponse struct {
 	Meals []*models.MealWithLimit `json:"meals"`
 }
+
+type DeleteMealRequest struct {
+	ID uuid.UUID `json:"id"`
+}

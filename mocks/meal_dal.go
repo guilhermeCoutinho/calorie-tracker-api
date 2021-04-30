@@ -36,6 +36,20 @@ func (m *MockMealDAL) EXPECT() *MockMealDALMockRecorder {
 	return m.recorder
 }
 
+// DeleteMeal mocks base method
+func (m *MockMealDAL) DeleteMeal(arg0 context.Context, arg1 uuid.UUID, arg2 *uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMeal", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMeal indicates an expected call of DeleteMeal
+func (mr *MockMealDALMockRecorder) DeleteMeal(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMeal", reflect.TypeOf((*MockMealDAL)(nil).DeleteMeal), arg0, arg1, arg2)
+}
+
 // GetMeal mocks base method
 func (m *MockMealDAL) GetMeal(arg0 context.Context, arg1 uuid.UUID, arg2 *uuid.UUID) (*models.Meal, error) {
 	m.ctrl.T.Helper()

@@ -2,6 +2,7 @@ package dal
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-pg/pg/v10"
@@ -14,6 +15,7 @@ type MealDAL interface {
 	UpsertMeal(ctx context.Context, user *models.Meal) error
 	GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
 	GetMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) (*models.Meal, error)
+	DeleteMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) error
 }
 
 type Meal struct {
@@ -72,4 +74,21 @@ func (u *Meal) GetMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) (*m
 	}
 
 	return meal, err
+}
+
+func (u *Meal) DeleteMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) error {
+	meal := models.Meal{
+		ID: id,
+	}
+
+	partialQuery := u.db.Model(&meal).Where("id = ?", id)
+	if userID != nil {
+		partialQuery = partialQuery.Where("user_id = ?", *userID)
+	}
+
+	result, err := partialQuery.Delete()
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no rows")
+	}
+	return err
 }

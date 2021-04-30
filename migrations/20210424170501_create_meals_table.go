@@ -15,7 +15,6 @@ func init() {
 			calories INTEGER NOT NULL,
 			date TIMESTAMP,
 			time_seconds INTEGER,
-			above_limit BOOL,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
 			updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
