@@ -21,7 +21,7 @@ type User struct {
 type AccessLevel int
 
 const (
-	Admin       AccessLevel = 1
-	Manager     AccessLevel = 2
-	RegulerUser AccessLevel = 3
+	Admin       AccessLevel = 0
+	Manager     AccessLevel = 1
+	RegulerUser AccessLevel = 2
 )

@@ -34,8 +34,7 @@ func NewUser(
 
 func (u *User) UpsertUser(ctx context.Context, user *models.User) error {
 	user.UpdatedAt = time.Now()
-	query := u.db.Model(user).OnConflict("(id) DO UPDATE")
-	err := upsertAllFields(query, user)
+	_, err := u.db.Model(user).OnConflict("(id) DO UPDATE").Insert()
 	return err
 }
 
