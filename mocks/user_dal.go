@@ -36,6 +36,20 @@ func (m *MockUserDAL) EXPECT() *MockUserDALMockRecorder {
 	return m.recorder
 }
 
+// DeleteUser mocks base method
+func (m *MockUserDAL) DeleteUser(arg0 context.Context, arg1 uuid.UUID, arg2 models.AccessLevel) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUser indicates an expected call of DeleteUser
+func (mr *MockUserDALMockRecorder) DeleteUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserDAL)(nil).DeleteUser), arg0, arg1, arg2)
+}
+
 // GetUser mocks base method
 func (m *MockUserDAL) GetUser(arg0 context.Context, arg1 string, arg2 *dal.QueryOptions) (*models.User, error) {
 	m.ctrl.T.Helper()
@@ -66,16 +80,30 @@ func (mr *MockUserDALMockRecorder) GetUsers(arg0, arg1, arg2 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserDAL)(nil).GetUsers), arg0, arg1, arg2)
 }
 
-// UpsertUser mocks base method
-func (m *MockUserDAL) UpsertUser(arg0 context.Context, arg1 *models.User) error {
+// InsertUser mocks base method
+func (m *MockUserDAL) InsertUser(arg0 context.Context, arg1 *models.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpsertUser", arg0, arg1)
+	ret := m.ctrl.Call(m, "InsertUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertUser indicates an expected call of InsertUser
+func (mr *MockUserDALMockRecorder) InsertUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUser", reflect.TypeOf((*MockUserDAL)(nil).InsertUser), arg0, arg1)
+}
+
+// UpsertUser mocks base method
+func (m *MockUserDAL) UpsertUser(arg0 context.Context, arg1 *models.User, arg2 models.AccessLevel) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertUser", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpsertUser indicates an expected call of UpsertUser
-func (mr *MockUserDALMockRecorder) UpsertUser(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockUserDALMockRecorder) UpsertUser(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertUser", reflect.TypeOf((*MockUserDAL)(nil).UpsertUser), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertUser", reflect.TypeOf((*MockUserDAL)(nil).UpsertUser), arg0, arg1, arg2)
 }

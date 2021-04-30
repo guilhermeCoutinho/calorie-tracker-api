@@ -10,7 +10,7 @@ func init() {
 		_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS meals (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-			user_id UUID REFERENCES users (id),
+			user_id UUID REFERENCES users (id) ON DELETE CASCADE,
 			meal VARCHAR NOT NULL,
 			calories INTEGER NOT NULL,
 			date TIMESTAMP,

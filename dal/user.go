@@ -2,6 +2,7 @@ package dal
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-pg/pg/v10"
@@ -11,9 +12,11 @@ import (
 )
 
 type UserDAL interface {
-	UpsertUser(ctx context.Context, user *models.User) error
+	InsertUser(ctx context.Context, user *models.User) error
+	UpsertUser(ctx context.Context, user *models.User, accessLevel models.AccessLevel) error
 	GetUser(ctx context.Context, userName string, options *QueryOptions) (*models.User, error)
 	GetUsers(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.User, error)
+	DeleteUser(ctx context.Context, userID uuid.UUID, accessLevel models.AccessLevel) error
 }
 
 type User struct {
@@ -31,9 +34,16 @@ func NewUser(
 	}
 }
 
-func (u *User) UpsertUser(ctx context.Context, user *models.User) error {
+func (u *User) InsertUser(ctx context.Context, user *models.User) error {
 	user.UpdatedAt = time.Now()
-	_, err := u.db.Model(user).OnConflict("(id) DO UPDATE").Insert()
+	user.CreatedAt = time.Now()
+	_, err := u.db.Model(user).Insert()
+	return err
+}
+
+func (u *User) UpsertUser(ctx context.Context, user *models.User, accessLevel models.AccessLevel) error {
+	user.UpdatedAt = time.Now()
+	_, err := u.db.Model(user).Where("access_level >= ?", accessLevel).Where("id = ?", user.ID).Update()
 	return err
 }
 
@@ -81,4 +91,18 @@ func (u *User) GetUsers(
 	}
 
 	return users, err
+}
+
+func (u *User) DeleteUser(ctx context.Context, id uuid.UUID, accessLevel models.AccessLevel) error {
+	user := models.User{ID: id}
+
+	result, err := u.db.Model(&user).Where("access_level >= ?", accessLevel).Where("id = ?", id).Delete()
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no rows")
+	}
+	return err
 }

@@ -33,7 +33,7 @@ func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
 
-	err = u.dal.User.UpsertUser(ctx, user[0])
+	err = u.dal.User.UpsertUser(ctx, user[0], claims.AccessLevel)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}

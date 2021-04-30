@@ -42,7 +42,7 @@ func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest,
 		AccessLevel:  models.RegulerUser,
 	}
 
-	err = u.dal.User.UpsertUser(ctx, user)
+	err = u.dal.User.InsertUser(ctx, user)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
