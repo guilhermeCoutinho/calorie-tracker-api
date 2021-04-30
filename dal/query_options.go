@@ -66,23 +66,23 @@ func addQueryOptions(query *orm.Query, options *QueryOptions) (*orm.Query, error
 func (f *Filtering) getFormattedQuery() (string, []interface{}, error) {
 	f.Filter = strings.ReplaceAll(f.Filter, "(", " ( ")
 	f.Filter = strings.ReplaceAll(f.Filter, ")", " ) ")
-	args := strings.Fields(f.Filter)
+	words := strings.Fields(f.Filter)
 
 	validator := NewValidator()
 
-	for i, arg := range args {
-		if arg == "(" || arg == ")" {
+	for i, word := range words {
+		if word == "(" || word == ")" {
 			continue
-		} else if arg == "AND" || arg == "OR" {
+		} else if strings.ToUpper(word) == "AND" || strings.ToUpper(word) == "OR" {
 			continue
 		}
 
-		replaceWith, success := validator.Validate(arg)
+		replaceWith, success := validator.Validate(word)
 		if !success {
-			return "", nil, fmt.Errorf("failed to parse string %v, %v, %v", args, i, arg)
+			return "", nil, fmt.Errorf("failed to parse string %v, %v, %v", words, i, word)
 		}
-		args[i] = replaceWith
+		words[i] = replaceWith
 	}
 
-	return strings.Join(args, " "), validator.params, nil
+	return strings.Join(words, " "), validator.params, nil
 }
