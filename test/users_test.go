@@ -21,7 +21,7 @@ func TestCreateUserSuccess(t *testing.T) {
 		CalorieLimit: 100,
 	}
 
-	doRequest(t, http.MethodPost, "/users", nil, createUserRequest, &messages.BaseResponse{})
+	doRequest(t, http.MethodPost, "/users", nil, createUserRequest, &map[string]interface{}{})
 
 	loginResponse := &messages.LoginResponse{}
 	doRequest(t, http.MethodPost, "/auth", nil, &messages.LoginRequest{
@@ -35,6 +35,6 @@ func TestCreateUserSuccess(t *testing.T) {
 	statusCode := doRequest(t, http.MethodGet, "/users/me", &loginResponse.AccessToken, &struct{}{}, getUsersResponse)
 
 	assert.Equal(t, http.StatusOK, statusCode)
-	assert.Equal(t, 100, getUsersResponse.Users.CalorieLimit)
-	assert.Equal(t, userName, getUsersResponse.Users.UserName)
+	assert.Equal(t, 100, getUsersResponse.Users[0].CalorieLimit)
+	assert.Equal(t, userName, getUsersResponse.Users[0].UserName)
 }

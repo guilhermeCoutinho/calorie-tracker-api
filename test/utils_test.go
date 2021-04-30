@@ -31,7 +31,7 @@ func getAuthenticatedUser(t *testing.T) string {
 		CalorieLimit: 100,
 	}
 
-	doRequest(t, http.MethodPost, "/users", nil, createUserRequest, &messages.BaseResponse{})
+	doRequest(t, http.MethodPost, "/users", nil, createUserRequest, &map[string]interface{}{})
 
 	loginResponse := &messages.LoginResponse{}
 	doRequest(t, http.MethodPost, "/auth", nil, &messages.LoginRequest{
