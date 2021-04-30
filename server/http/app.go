@@ -5,8 +5,12 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/guilhermeCoutinho/api-studies/controller/auth"
+	"github.com/guilhermeCoutinho/api-studies/controller/healthcheck"
+	"github.com/guilhermeCoutinho/api-studies/controller/meal"
+	"github.com/guilhermeCoutinho/api-studies/controller/noauthuser"
+	"github.com/guilhermeCoutinho/api-studies/controller/user"
 	"github.com/guilhermeCoutinho/api-studies/dal"
-	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/guilhermeCoutinho/api-studies/services/calorieprovider"
 	"github.com/sirupsen/logrus"
@@ -52,11 +56,11 @@ func (a *App) buildRoutes(dal *dal.DAL) {
 	authRouter := router.PathPrefix("/").Subrouter()
 	authRouter.Use(authMiddleware.Authenticate)
 
-	healthCheckController := controller.NewHealthcheck()
-	userNoAuthController := controller.NewUserNoAuth(dal, a.config)
-	userController := controller.NewUser(dal, a.config)
-	authController := controller.NewAuth(dal, a.config)
-	mealController := controller.NewMeal(dal, a.config, &calorieprovider.ProviderImpl{})
+	healthCheckController := healthcheck.NewHealthcheck()
+	userNoAuthController := noauthuser.NewUserNoAuth(dal, a.config)
+	userController := user.NewUser(dal, a.config)
+	authController := auth.NewAuth(dal, a.config)
+	mealController := meal.NewMeal(dal, a.config, &calorieprovider.ProviderImpl{})
 
 	a.wrapper.Register(router, "/users", userNoAuthController)
 	a.wrapper.Register(router, "/auth", authController)
@@ -66,6 +70,7 @@ func (a *App) buildRoutes(dal *dal.DAL) {
 	a.wrapper.Register(authRouter, "/users/{userID}", userController)
 
 	a.wrapper.Register(authRouter, "/meals", mealController)
+	a.wrapper.Register(authRouter, "/users", userController)
 
 	a.router = router
 }

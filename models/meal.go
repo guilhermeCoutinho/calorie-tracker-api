@@ -7,7 +7,7 @@ import (
 )
 
 type Meal struct {
-	ID          uuid.UUID `json:"-" pg:"id, pk"`
+	ID          uuid.UUID `json:"id" pg:"id, pk"`
 	UserID      uuid.UUID `json:"user_id" pg:"user_id"`
 	Meal        string    `json:"meal" pg:"meal"`
 	Calories    int       `json:"calories" pg:"calories"`

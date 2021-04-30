@@ -1,4 +1,4 @@
-package controller
+package auth
 
 import (
 	"context"
@@ -24,11 +24,6 @@ const (
 	accessLevelClaim = "accessLevel"
 	expirationClaim  = "exp"
 )
-
-type Claims struct {
-	UserID      uuid.UUID
-	AccessLevel models.AccessLevel
-}
 
 type Auth struct {
 	dal    *dal.DAL
@@ -88,7 +83,7 @@ func getToken(user *models.User, expiration time.Duration) (string, error) {
 	return tokenString, nil
 }
 
-func (a *Auth) ClaimsFromToken(tokenStr string) (*Claims, error) {
+func (a *Auth) ClaimsFromToken(tokenStr string) (*models.Claims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid sign method")
@@ -118,7 +113,7 @@ func (a *Auth) ClaimsFromToken(tokenStr string) (*Claims, error) {
 
 	accessLevel := int(claims[accessLevelClaim].(float64))
 
-	return &Claims{
+	return &models.Claims{
 		UserID:      userID,
 		AccessLevel: models.AccessLevel(accessLevel),
 	}, nil

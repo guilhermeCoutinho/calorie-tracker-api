@@ -1,4 +1,4 @@
-package controller
+package contextextensions
 
 import (
 	"context"
@@ -7,23 +7,25 @@ import (
 	"net/url"
 
 	"github.com/guilhermeCoutinho/api-studies/dal"
+	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const ctxKey = "ctxKey"
 
-func ClaimsToCtx(ctx context.Context, claims *Claims) context.Context {
+func ClaimsToCtx(ctx context.Context, claims *models.Claims) context.Context {
 	rawBytes, _ := json.Marshal(claims)
 	return context.WithValue(ctx, ctxKey, rawBytes)
 }
 
-func ClaimsFromCtx(ctx context.Context) (*Claims, error) {
+func ClaimsFromCtx(ctx context.Context) (*models.Claims, error) {
 	val, ok := ctx.Value(ctxKey).([]byte)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert context")
 	}
-	var claim Claims
+	var claim models.Claims
 	err := json.Unmarshal(val, &claim)
 	if err != nil {
 		return nil, err
@@ -36,7 +38,7 @@ func LoggerFromCtx(ctx context.Context) logrus.FieldLogger {
 	return ctx.Value(wrapper.LoggerCtxKey).(logrus.FieldLogger)
 }
 
-func getQueryOptions(ctx context.Context) *dal.QueryOptions {
+func GetQueryOptions(ctx context.Context) *dal.QueryOptions {
 	params := ctx.Value(wrapper.URLParamsCtxKey).(url.Values)
 	options := &dal.QueryOptions{}
 
@@ -56,4 +58,13 @@ func getQueryOptions(ctx context.Context) *dal.QueryOptions {
 	}
 
 	return options
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
 }

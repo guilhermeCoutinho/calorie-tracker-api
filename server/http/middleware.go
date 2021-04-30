@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/guilhermeCoutinho/api-studies/server/http/controller"
+	"github.com/guilhermeCoutinho/api-studies/controller/auth"
+	"github.com/guilhermeCoutinho/api-studies/controller/contextextensions"
 	"github.com/sirupsen/logrus"
 )
 
 type Middleware struct {
-	auth   *controller.Auth
+	auth   *auth.Auth
 	logger logrus.FieldLogger
 }
 
@@ -42,7 +43,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		})
 
 		logger.Debug("User authorized")
-		r = r.WithContext(controller.ClaimsToCtx(r.Context(), claims))
+		r = r.WithContext(contextextensions.ClaimsToCtx(r.Context(), claims))
 		next.ServeHTTP(w, r)
 	})
 }

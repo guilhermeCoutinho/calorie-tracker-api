@@ -1,10 +1,11 @@
-package controller
+package user
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/guilhermeCoutinho/api-studies/controller/contextextensions"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
@@ -28,7 +29,7 @@ func NewUser(
 }
 
 func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *struct{}) (*messages.BaseResponse, *wrapper.HandlerError) {
-	claims, err := ClaimsFromCtx(ctx)
+	claims, err := contextextensions.ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
@@ -52,12 +53,12 @@ func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *
 }
 
 func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messages.GetUsersResponse, *wrapper.HandlerError) {
-	claims, err := ClaimsFromCtx(ctx)
+	claims, err := contextextensions.ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
-	user, err := u.dal.User.GetUserByID(ctx, claims.UserID, getQueryOptions(ctx))
+	user, err := u.dal.User.GetUserByID(ctx, claims.UserID, contextextensions.GetQueryOptions(ctx))
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}
@@ -83,7 +84,7 @@ func updateUser(user *models.User, args *messages.UpdateUserRequest, accessLevel
 	}
 
 	if args.Password != nil {
-		newPassword, err := hashPassword(*args.Password)
+		newPassword, err := contextextensions.HashPassword(*args.Password)
 		if err != nil {
 			return err
 		}

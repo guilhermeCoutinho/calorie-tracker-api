@@ -1,16 +1,16 @@
-package controller
+package noauthuser
 
 import (
 	"context"
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/guilhermeCoutinho/api-studies/controller/contextextensions"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/spf13/viper"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserNoAuth struct {
@@ -29,7 +29,7 @@ func NewUserNoAuth(
 }
 
 func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest, vars *struct{}) (*messages.BaseResponse, *wrapper.HandlerError) {
-	hashedPassword, err := hashPassword(args.Password)
+	hashedPassword, err := contextextensions.HashPassword(args.Password)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
@@ -47,13 +47,4 @@ func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest,
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 	return &messages.BaseResponse{Code: http.StatusOK}, nil
-}
-
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes), nil
 }

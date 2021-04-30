@@ -7,14 +7,18 @@ import (
 
 type CreateMealPayload struct {
 	UserID   *uuid.UUID
-	Meal     string `json:"meal"`
-	Calories *int   `json:"calories"`
-	Date     string `json:"date"`
-	Time     string `json:"time"`
+	Meal     *string `json:"meal"`
+	Calories *int    `json:"calories"`
+	Date     *string `json:"date"`
+	Time     *string `json:"time"`
+}
+
+type UpdateMealRequest struct {
+	ID uuid.UUID
+	*CreateMealPayload
 }
 
 type CreateMealResponse struct {
-	BaseResponse
 	Meals *models.Meal `json:"meal"`
 }
 
@@ -23,6 +27,5 @@ type RouteVars struct {
 }
 
 type GetMealsResponse struct {
-	BaseResponse
 	Meals []*models.MealWithLimit `json:"meals"`
 }

@@ -1,4 +1,4 @@
-package controller
+package meal
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/guilhermeCoutinho/api-studies/controller/contextextensions"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/mocks"
@@ -42,6 +43,10 @@ func ptrToUUID(val uuid.UUID) *uuid.UUID {
 	return &val
 }
 
+func ptrToString(val string) *string {
+	return &val
+}
+
 func TestCreateMeal(t *testing.T) {
 	t.Parallel()
 	gomock.NewController(t)
@@ -59,22 +64,22 @@ func TestCreateMeal(t *testing.T) {
 	}{
 		"success": {
 			payload: &messages.CreateMealPayload{
-				Meal:     "hamburguer",
-				Date:     "2020-Jan-01",
-				Time:     "12h",
+				Meal:     ptrToString("hamburguer"),
+				Date:     ptrToString("2020-Jan-01"),
+				Time:     ptrToString("12h"),
 				Calories: ptrToInt(100),
 				UserID:   ptrToUUID(constantUserID),
 			},
 			vars: &messages.RouteVars{},
 			ctx: func() context.Context {
 				ctx := context.Background()
-				return ClaimsToCtx(ctx, &Claims{
+				return contextextensions.ClaimsToCtx(ctx, &models.Claims{
 					UserID:      constantUserID,
 					AccessLevel: models.RegulerUser,
 				})
 			},
 			mocks: func(ctx context.Context, args *messages.CreateMealPayload, m *Mocks) {
-				claims, err := ClaimsFromCtx(ctx)
+				claims, err := contextextensions.ClaimsFromCtx(ctx)
 				assert.Nil(t, err)
 
 				m.MockMealDAL.EXPECT().UpsertMeal(gomock.Any(), gomock.Any()).Do(func(ctx context.Context, meal *models.Meal) {
@@ -88,16 +93,16 @@ func TestCreateMeal(t *testing.T) {
 
 		"wrong_access_level": {
 			payload: &messages.CreateMealPayload{
-				Meal:     "hamburguer",
-				Date:     "2020-Jan-01",
-				Time:     "12h",
+				Meal:     ptrToString("hamburguer"),
+				Date:     ptrToString("2020-Jan-01"),
+				Time:     ptrToString("12h"),
 				Calories: ptrToInt(100),
 				UserID:   ptrToUUID(uuid.New()),
 			},
 			vars: &messages.RouteVars{},
 			ctx: func() context.Context {
 				ctx := context.Background()
-				return ClaimsToCtx(ctx, &Claims{
+				return contextextensions.ClaimsToCtx(ctx, &models.Claims{
 					UserID:      uuid.New(),
 					AccessLevel: models.RegulerUser,
 				})
@@ -108,19 +113,19 @@ func TestCreateMeal(t *testing.T) {
 
 		"success_provider": {
 			payload: &messages.CreateMealPayload{
-				Meal: "hamburguer",
-				Date: "2020-Jan-01",
-				Time: "12h",
+				Meal: ptrToString("hamburguer"),
+				Date: ptrToString("2020-Jan-01"),
+				Time: ptrToString("12h"),
 			},
 			vars: nil,
 			ctx: func() context.Context {
 				ctx := context.Background()
-				return ClaimsToCtx(ctx, &Claims{
+				return contextextensions.ClaimsToCtx(ctx, &models.Claims{
 					UserID: uuid.New(),
 				})
 			},
 			mocks: func(ctx context.Context, args *messages.CreateMealPayload, m *Mocks) {
-				claims, err := ClaimsFromCtx(ctx)
+				claims, err := contextextensions.ClaimsFromCtx(ctx)
 				assert.Nil(t, err)
 				m.MockCaloroeProvider.EXPECT().GetCalories(args.Meal).Return(99, nil)
 				m.MockMealDAL.EXPECT().UpsertMeal(gomock.Any(), gomock.Any()).Do(func(ctx context.Context, meal *models.Meal) {

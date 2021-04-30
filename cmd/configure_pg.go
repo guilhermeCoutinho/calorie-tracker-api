@@ -49,7 +49,7 @@ func connectToPG(prefix string) (*pg.DB, error) {
 		MaxRetries: maxRetries,
 	}
 	db := pg.Connect(options)
-	db.AddQueryHook(nullLogger{})
+	db.AddQueryHook(dbLogger{})
 	err := waitForConnection(db, timeout)
 	return db, err
 }

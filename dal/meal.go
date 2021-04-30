@@ -13,6 +13,7 @@ import (
 type MealDAL interface {
 	UpsertMeal(ctx context.Context, user *models.Meal) error
 	GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
+	GetMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) (*models.Meal, error)
 }
 
 type Meal struct {
@@ -32,8 +33,7 @@ func NewMeal(
 
 func (u *Meal) UpsertMeal(ctx context.Context, meal *models.Meal) error {
 	meal.UpdatedAt = time.Now()
-	query := u.db.Model(meal).OnConflict("(id) DO UPDATE")
-	err := upsertAllFields(query, meal)
+	_, err := u.db.Model(meal).OnConflict("(id) DO UPDATE").Insert()
 	return err
 }
 
@@ -56,4 +56,20 @@ func (u *Meal) GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOp
 	}
 
 	return meals, err
+}
+
+func (u *Meal) GetMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) (*models.Meal, error) {
+	var meal *models.Meal
+
+	partialQuery := u.db.Model(&meal).Where("id = ?", id)
+	if userID != nil {
+		partialQuery = partialQuery.Where("user_id = ?", *userID)
+	}
+
+	err := partialQuery.Select()
+	if err != nil {
+		return nil, err
+	}
+
+	return meal, err
 }

@@ -25,3 +25,8 @@ const (
 	Manager     AccessLevel = 1
 	RegulerUser AccessLevel = 2
 )
+
+type Claims struct {
+	UserID      uuid.UUID
+	AccessLevel AccessLevel
+}

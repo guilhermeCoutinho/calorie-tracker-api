@@ -36,6 +36,21 @@ func (m *MockMealDAL) EXPECT() *MockMealDALMockRecorder {
 	return m.recorder
 }
 
+// GetMeal mocks base method
+func (m *MockMealDAL) GetMeal(arg0 context.Context, arg1 uuid.UUID, arg2 *uuid.UUID) (*models.Meal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMeal", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*models.Meal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMeal indicates an expected call of GetMeal
+func (mr *MockMealDALMockRecorder) GetMeal(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeal", reflect.TypeOf((*MockMealDAL)(nil).GetMeal), arg0, arg1, arg2)
+}
+
 // GetMeals mocks base method
 func (m *MockMealDAL) GetMeals(arg0 context.Context, arg1 *uuid.UUID, arg2 *dal.QueryOptions) ([]*models.MealWithLimit, error) {
 	m.ctrl.T.Helper()
