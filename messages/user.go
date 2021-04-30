@@ -17,4 +17,5 @@ type UpdateUserRequest struct {
 	Username     *string `json:"userName"`
 	CalorieLimit *int    `json:"caloriesLimit"`
 	AccessLevel  *string `json:"accessLevel"`
+	Password     *string `json:"password"`
 }

@@ -9,13 +9,11 @@ func init() {
 	up := func(db orm.DB) error {
 		_, err := db.Exec(`
 
-		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 		CREATE TABLE IF NOT EXISTS users (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			user_name VARCHAR NOT NULL,
 			password VARCHAR NOT NULL,
-			access_level VARCHAR,
+			access_level INTEGER REFERENCES access_levels (level) NOT NULL,
 			calorie_limit INTEGER NOT NULL DEFAULT 0,
 
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),

@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -10,6 +12,7 @@ import (
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/mocks"
 	"github.com/guilhermeCoutinho/api-studies/models"
+	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,18 +38,24 @@ func ptrToInt(val int) *int {
 	return &val
 }
 
+func ptrToUUID(val uuid.UUID) *uuid.UUID {
+	return &val
+}
+
 func TestCreateMeal(t *testing.T) {
 	t.Parallel()
 	gomock.NewController(t)
 
+	constantUserID := uuid.New()
+
 	testTable := map[string]struct {
 		payload *messages.CreateMealPayload
-		vars    *messages.CreateMealVars
+		vars    *messages.RouteVars
 		ctx     func() context.Context
 		mocks   func(context.Context, *messages.CreateMealPayload, *Mocks)
 
 		response *messages.CreateMealResponse
-		err      error
+		err      *wrapper.HandlerError
 	}{
 		"success": {
 			payload: &messages.CreateMealPayload{
@@ -54,14 +63,14 @@ func TestCreateMeal(t *testing.T) {
 				Date:     "2020-Jan-01",
 				Time:     "12h",
 				Calories: ptrToInt(100),
+				UserID:   ptrToUUID(constantUserID),
 			},
-			vars: &messages.CreateMealVars{
-				UserID: "me",
-			},
+			vars: &messages.RouteVars{},
 			ctx: func() context.Context {
 				ctx := context.Background()
 				return ClaimsToCtx(ctx, &Claims{
-					UserID: uuid.New(),
+					UserID:      constantUserID,
+					AccessLevel: models.RegulerUser,
 				})
 			},
 			mocks: func(ctx context.Context, args *messages.CreateMealPayload, m *Mocks) {
@@ -77,15 +86,33 @@ func TestCreateMeal(t *testing.T) {
 			err: nil,
 		},
 
+		"wrong_access_level": {
+			payload: &messages.CreateMealPayload{
+				Meal:     "hamburguer",
+				Date:     "2020-Jan-01",
+				Time:     "12h",
+				Calories: ptrToInt(100),
+				UserID:   ptrToUUID(uuid.New()),
+			},
+			vars: &messages.RouteVars{},
+			ctx: func() context.Context {
+				ctx := context.Background()
+				return ClaimsToCtx(ctx, &Claims{
+					UserID:      uuid.New(),
+					AccessLevel: models.RegulerUser,
+				})
+			},
+			mocks: func(ctx context.Context, args *messages.CreateMealPayload, m *Mocks) {},
+			err:   &wrapper.HandlerError{Err: fmt.Errorf("wrong access level"), StatusCode: http.StatusUnauthorized},
+		},
+
 		"success_provider": {
 			payload: &messages.CreateMealPayload{
 				Meal: "hamburguer",
 				Date: "2020-Jan-01",
 				Time: "12h",
 			},
-			vars: &messages.CreateMealVars{
-				UserID: "me",
-			},
+			vars: nil,
 			ctx: func() context.Context {
 				ctx := context.Background()
 				return ClaimsToCtx(ctx, &Claims{

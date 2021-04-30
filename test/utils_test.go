@@ -18,8 +18,11 @@ import (
 	"github.com/topfreegames/extensions/pg/interfaces"
 )
 
+var autoIncrementID int = 9999
+
 func getAuthenticatedUser(t *testing.T) string {
-	userName := "userName"
+	userName := fmt.Sprintf("userName_%d", autoIncrementID)
+	autoIncrementID++
 	password := "MyPassword"
 
 	createUserRequest := &messages.CreateUserRequest{
@@ -57,6 +60,10 @@ func doRequest(t *testing.T, method string, path string, token *string, payload 
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return resp.StatusCode
+	}
+
 	bufferSize := int64(1024 * 1024)
 	response, err := ioutil.ReadAll(io.LimitReader(resp.Body, bufferSize))
 	assert.Nil(t, err)
@@ -80,12 +87,12 @@ func GetConfigFromPath(t testing.TB, path string) *viper.Viper {
 }
 
 func GetPG(t testing.TB) func() {
-	config := GetConfigFromPath(t, "../config/config.yaml")
-	db, _ := connectToPG(config, "db")
+	//	config := GetConfigFromPath(t, "../config/config.yaml")
+	//	connectToPG(config, "db")
 
 	return func() {
-		TruncateTables(t, db)
-		db.Close()
+		//		TruncateTables(t, db)
+		//		db.Close()
 	}
 }
 
@@ -147,7 +154,7 @@ func TruncateTables(t testing.TB, db interfaces.DB) {
 	DECLARE
 		statements CURSOR FOR
 			SELECT tablename FROM pg_tables
-			WHERE tableowner = username AND schemaname = 'public' AND tablename != 'gopg_migrations';
+			WHERE tableowner = username AND schemaname = 'public' AND tablename != 'gopg_migrations' AND tablename != 'access_levels';
 	BEGIN
 		FOR stmt IN statements LOOP
 			EXECUTE 'TRUNCATE TABLE ' || quote_ident(stmt.tablename) || ' CASCADE;';

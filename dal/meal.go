@@ -12,7 +12,7 @@ import (
 
 type MealDAL interface {
 	UpsertMeal(ctx context.Context, user *models.Meal) error
-	GetMeals(ctx context.Context, userID uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
+	GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
 }
 
 type Meal struct {
@@ -37,17 +37,23 @@ func (u *Meal) UpsertMeal(ctx context.Context, meal *models.Meal) error {
 	return err
 }
 
-func (u *Meal) GetMeals(ctx context.Context, userID uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error) {
+func (u *Meal) GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error) {
 	var meals []*models.MealWithLimit
-	partialQuery := u.db.Model(&meals).Where("user_id=?", userID.String())
+
+	partialQuery := u.db.Model(&meals)
+	if userID != nil {
+		partialQuery = partialQuery.Where("user_id = ?", *userID)
+	}
 
 	partialQuery, err := addQueryOptions(partialQuery, options)
 	if err != nil {
 		return nil, err
 	}
+
 	err = partialQuery.Select()
 	if err != nil {
 		return nil, err
 	}
+
 	return meals, err
 }

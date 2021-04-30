@@ -65,6 +65,8 @@ func (a *App) buildRoutes(dal *dal.DAL) {
 	a.wrapper.Register(authRouter, "/users/{userID}/meals", mealController)
 	a.wrapper.Register(authRouter, "/users/{userID}", userController)
 
+	a.wrapper.Register(authRouter, "/meals", mealController)
+
 	a.router = router
 }
 

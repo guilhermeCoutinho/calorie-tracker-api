@@ -33,20 +33,15 @@ func NewMeal(
 	}
 }
 
-func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.CreateMealVars) (*messages.CreateMealResponse, *wrapper.HandlerError) {
+func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars *messages.RouteVars) (*messages.CreateMealResponse, *wrapper.HandlerError) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
-	userID := uuid.Nil
-	if vars.UserID == "me" {
-		userID = claims.UserID
-	} else {
-		userID, err = uuid.Parse(vars.UserID)
-		if err != nil {
-			return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
-		}
+	err = m.validatePostAccessLevel(claims, args)
+	if err != nil {
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
 
 	err = m.tryEnrichFromCaloriesAPI(args)
@@ -54,7 +49,7 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
-	meal, err := m.mealFromRequest(userID, args)
+	meal, err := m.mealFromRequest(args)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 	}
@@ -75,20 +70,32 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 	}, nil
 }
 
-func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *messages.GetMealsVars) (*messages.GetMealsResponse, *wrapper.HandlerError) {
+func (m *Meal) validatePostAccessLevel(claims *Claims, args *messages.CreateMealPayload) error {
+	if args.UserID == nil {
+		args.UserID = &claims.UserID
+	}
+
+	if claims.AccessLevel == models.Admin {
+		return nil
+	}
+
+	if *args.UserID != claims.UserID {
+		return fmt.Errorf("wrong access level")
+	}
+
+	return nil
+}
+
+func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *messages.RouteVars) (*messages.GetMealsResponse, *wrapper.HandlerError) {
 	claims, err := ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
-	userID := uuid.Nil
-	if vars.UserID == "me" {
-		userID = claims.UserID
-	} else {
-		userID, err = uuid.Parse(vars.UserID)
-		if err != nil {
-			return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
-		}
+	userID, wrapperErr := m.validatetGetAccessLevel(claims, vars)
+	fmt.Println("userID to filter is ", userID)
+	if wrapperErr != nil {
+		return nil, wrapperErr
 	}
 
 	meals, err := m.dal.Meal.GetMeals(ctx, userID, getQueryOptions(ctx))
@@ -104,7 +111,31 @@ func (m *Meal) Get(ctx context.Context, args *messages.GetMealsResponse, vars *m
 	}, nil
 }
 
-func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload) (*models.Meal, error) {
+func (m *Meal) validatetGetAccessLevel(claims *Claims, vars *messages.RouteVars) (*uuid.UUID, *wrapper.HandlerError) {
+	if vars == nil || vars.UserID == nil {
+		if claims.AccessLevel == models.Admin {
+			return nil, nil
+		}
+		return &claims.UserID, nil
+	}
+
+	if *vars.UserID == "me" || *vars.UserID == claims.UserID.String() {
+		return &claims.UserID, nil
+	}
+
+	userID, err := uuid.Parse(*vars.UserID)
+	if err != nil {
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
+	}
+
+	if claims.AccessLevel != models.Admin {
+		return nil, &wrapper.HandlerError{Err: fmt.Errorf("cannot access other user records"), StatusCode: http.StatusUnauthorized}
+	}
+
+	return &userID, nil
+}
+
+func (m *Meal) mealFromRequest(req *messages.CreateMealPayload) (*models.Meal, error) {
 	mealDate, err := time.Parse("2006-Jan-02", req.Date)
 	if err != nil {
 		return nil, err
@@ -117,7 +148,7 @@ func (m *Meal) mealFromRequest(userID uuid.UUID, req *messages.CreateMealPayload
 
 	meal := &models.Meal{
 		ID:          uuid.New(),
-		UserID:      userID,
+		UserID:      *req.UserID,
 		Meal:        req.Meal,
 		Calories:    *req.Calories,
 		Date:        mealDate,

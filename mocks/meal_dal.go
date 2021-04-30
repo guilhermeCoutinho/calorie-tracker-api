@@ -37,7 +37,7 @@ func (m *MockMealDAL) EXPECT() *MockMealDALMockRecorder {
 }
 
 // GetMeals mocks base method
-func (m *MockMealDAL) GetMeals(arg0 context.Context, arg1 uuid.UUID, arg2 *dal.QueryOptions) ([]*models.MealWithLimit, error) {
+func (m *MockMealDAL) GetMeals(arg0 context.Context, arg1 *uuid.UUID, arg2 *dal.QueryOptions) ([]*models.MealWithLimit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMeals", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*models.MealWithLimit)

@@ -13,6 +13,7 @@ import (
 const URL = "http://localhost:8080"
 
 func TestCreateMealSuccess(t *testing.T) {
+	t.Parallel()
 	drop := GetPG(t)
 	drop()
 
@@ -26,16 +27,39 @@ func TestCreateMealSuccess(t *testing.T) {
 		Time:     "2h00m",
 	}
 
-	createMealResponse := &messages.CreateMealResponse{}
-	doRequest(t, http.MethodPost, "/users/me/meals", &token, createMealRequest, createMealResponse)
+	doRequest(t, http.MethodPost, "/meals", &token, createMealRequest, &map[string]interface{}{})
+	fromDBResponse := &messages.GetMealsResponse{}
+	doRequest(t, http.MethodGet, "/meals", &token, struct{}{}, fromDBResponse)
 
-	assert.NotNil(t, createMealResponse.Meals)
-	assert.Equal(t, calories, createMealResponse.Meals.Calories)
-	assert.Equal(t, "hamburguer", createMealResponse.Meals.Meal)
-	assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", createMealResponse.Meals.Date.String())
+	assert.Equal(t, 100, fromDBResponse.Meals[0].Calories)
+	assert.Equal(t, "hamburguer", fromDBResponse.Meals[0].Meal.Meal)
+}
+
+func TestCreateMeal(t *testing.T) {
+	t.Parallel()
+	drop := GetPG(t)
+	drop()
+
+	token := getAuthenticatedUser(t)
+
+	calories := 100
+	createMealRequest := &messages.CreateMealPayload{
+		Meal:     "hamburguer",
+		Calories: &calories,
+		Date:     "2021-Jan-01",
+		Time:     "2h00m",
+	}
+
+	doRequest(t, http.MethodPost, "/meals", &token, createMealRequest, &map[string]interface{}{})
+	fromDBResponse := &messages.GetMealsResponse{}
+	doRequest(t, http.MethodGet, "/meals", &token, struct{}{}, fromDBResponse)
+
+	assert.Equal(t, 100, fromDBResponse.Meals[0].Calories)
+	assert.Equal(t, "hamburguer", fromDBResponse.Meals[0].Meal.Meal)
 }
 
 func TestCreateMealWithCalorieProvider(t *testing.T) {
+	t.Parallel()
 	drop := GetPG(t)
 	drop()
 
@@ -50,10 +74,14 @@ func TestCreateMealWithCalorieProvider(t *testing.T) {
 	createMealResponse := &messages.CreateMealResponse{}
 	doRequest(t, http.MethodPost, "/users/me/meals", &token, createMealRequest, createMealResponse)
 
-	assert.NotZero(t, createMealResponse.Meals.Calories)
+	fromDBResponse := &messages.GetMealsResponse{}
+	doRequest(t, http.MethodGet, "/meals", &token, struct{}{}, fromDBResponse)
+
+	assert.NotZero(t, fromDBResponse.Meals[0].Calories)
 }
 
 func TestCreateMealFail(t *testing.T) {
+	t.Parallel()
 	drop := GetPG(t)
 	drop()
 
@@ -67,13 +95,12 @@ func TestCreateMealFail(t *testing.T) {
 		Calories: &calories,
 	}
 
-	createMealResponse := &messages.CreateMealResponse{}
-	statusCode := doRequest(t, http.MethodPost, "/users/me/meals", &token, createMealRequest, createMealResponse)
-
-	assert.Equal(t, http.StatusInternalServerError, statusCode)
+	statusCode := doRequest(t, http.MethodPost, "/users/me/meals", &token, createMealRequest, &map[string]interface{}{})
+	assert.Equal(t, http.StatusBadRequest, statusCode)
 }
 
 func TestMealsBelowLimit(t *testing.T) {
+	t.Parallel()
 	drop := GetPG(t)
 	drop()
 
@@ -102,6 +129,7 @@ func TestMealsBelowLimit(t *testing.T) {
 }
 
 func TestMealsAboveLimit(t *testing.T) {
+	t.Parallel()
 	drop := GetPG(t)
 	drop()
 

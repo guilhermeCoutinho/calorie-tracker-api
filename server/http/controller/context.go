@@ -51,9 +51,8 @@ func getQueryOptions(ctx context.Context) *dal.QueryOptions {
 	}
 
 	if val, ok := params["filtering"]; ok {
-		options.Filtering = &dal.Filtering{
-			Filter: val[0],
-		}
+		options.Filtering = &dal.Filtering{}
+		json.Unmarshal([]byte(val[0]), options.Filtering)
 	}
 
 	return options

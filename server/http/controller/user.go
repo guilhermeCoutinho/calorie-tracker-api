@@ -68,7 +68,7 @@ func (u *User) Get(ctx context.Context, args *struct{}, vars *struct{}) (*messag
 	}, nil
 }
 
-func updateUser(user *models.User, args *messages.UpdateUserRequest, accessLevel AccessLevel) error {
+func updateUser(user *models.User, args *messages.UpdateUserRequest, accessLevel models.AccessLevel) error {
 	if args.CalorieLimit != nil {
 		user.CalorieLimit = *args.CalorieLimit
 	}
@@ -77,9 +77,17 @@ func updateUser(user *models.User, args *messages.UpdateUserRequest, accessLevel
 	}
 
 	if args.AccessLevel != nil {
-		if accessLevel != Admin {
+		if accessLevel != models.Admin {
 			return fmt.Errorf("only admin can change access level")
 		}
+	}
+
+	if args.Password != nil {
+		newPassword, err := hashPassword(*args.Password)
+		if err != nil {
+			return err
+		}
+		user.Password = newPassword
 	}
 	return nil
 }

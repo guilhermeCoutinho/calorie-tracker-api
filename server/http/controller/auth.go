@@ -11,20 +11,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/dal"
 	"github.com/guilhermeCoutinho/api-studies/messages"
+	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var encryptionKey = []byte("659B832C2A8581A8F3429C931A00208E")
-
-type AccessLevel string
-
-const (
-	Admin       AccessLevel = "Admin"
-	Manager     AccessLevel = "Manager"
-	RegulerUser AccessLevel = "RegularUser"
-)
 
 const (
 	userIDClaim      = "userId"
@@ -34,7 +27,7 @@ const (
 
 type Claims struct {
 	UserID      uuid.UUID
-	AccessLevel AccessLevel
+	AccessLevel models.AccessLevel
 }
 
 type Auth struct {
@@ -63,7 +56,7 @@ func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest, vars *stru
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
 
-	token, err := getToken(user.ID, time.Hour*1)
+	token, err := getToken(user, time.Hour*1)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
@@ -77,12 +70,12 @@ func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest, vars *stru
 	return response, nil
 }
 
-func getToken(userID uuid.UUID, expiration time.Duration) (string, error) {
+func getToken(user *models.User, expiration time.Duration) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims[accessLevelClaim] = Admin
-	claims[userIDClaim] = userID
+	claims[accessLevelClaim] = user.AccessLevel
+	claims[userIDClaim] = user.ID
 	claims[expirationClaim] = time.Now().UTC().Add(expiration).Unix()
 
 	token.Claims = claims
@@ -123,11 +116,11 @@ func (a *Auth) ClaimsFromToken(tokenStr string) (*Claims, error) {
 		return nil, err
 	}
 
-	accessLevel := claims[accessLevelClaim].(AccessLevel)
+	accessLevel := int(claims[accessLevelClaim].(float64))
 
 	return &Claims{
 		UserID:      userID,
-		AccessLevel: accessLevel,
+		AccessLevel: models.AccessLevel(accessLevel),
 	}, nil
 }
 

@@ -39,6 +39,7 @@ func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest,
 		UserName:     args.Username,
 		Password:     hashedPassword,
 		CalorieLimit: args.CalorieLimit,
+		AccessLevel:  models.RegulerUser,
 	}
 
 	err = u.dal.User.UpsertUser(ctx, user)
