@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 
+	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/dal"
+	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
 	"github.com/guilhermeCoutinho/api-studies/server/http/wrapper"
 	"github.com/sirupsen/logrus"
@@ -67,4 +70,30 @@ func HashPassword(password string) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+func ValidatetGetAccessLevel(claims *models.Claims, vars *messages.RouteVars, hasAccess func(models.AccessLevel) bool) (*uuid.UUID, *wrapper.HandlerError) {
+	userIDNotSpecified := vars == nil || vars.UserID == nil
+	if userIDNotSpecified {
+		if hasAccess(claims.AccessLevel) {
+			return nil, nil
+		}
+		return &claims.UserID, nil
+	}
+
+	accessingOwnFiles := *vars.UserID == "me" || *vars.UserID == claims.UserID.String()
+	if accessingOwnFiles {
+		return &claims.UserID, nil
+	}
+
+	userID, err := uuid.Parse(*vars.UserID)
+	if err != nil {
+		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
+	}
+
+	if !hasAccess(claims.AccessLevel) {
+		return nil, &wrapper.HandlerError{Err: fmt.Errorf("cannot access other user records"), StatusCode: http.StatusUnauthorized}
+	}
+
+	return &userID, nil
 }
