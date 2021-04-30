@@ -2,7 +2,6 @@ package dal
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-pg/pg/v10"
@@ -14,7 +13,7 @@ import (
 type UserDAL interface {
 	UpsertUser(ctx context.Context, user *models.User) error
 	GetUser(ctx context.Context, userName string, options *QueryOptions) (*models.User, error)
-	GetUserByID(ctx context.Context, userID uuid.UUID, options *QueryOptions) (*models.User, error)
+	GetUsers(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.User, error)
 }
 
 type User struct {
@@ -43,34 +42,43 @@ func (u *User) GetUser(
 	userName string,
 	options *QueryOptions,
 ) (*models.User, error) {
-	return u.getUser(ctx, "user_name", userName, options)
-}
-
-func (u *User) GetUserByID(
-	ctx context.Context,
-	userID uuid.UUID,
-	options *QueryOptions,
-) (*models.User, error) {
-	return u.getUser(ctx, "id", userID, options)
-}
-
-func (u *User) getUser(
-	ctx context.Context,
-	column string,
-	value interface{},
-	options *QueryOptions,
-) (*models.User, error) {
 	user := &models.User{}
-	condition := fmt.Sprintf("%s=?", column)
 
-	partialQuery := u.db.Model(user).Where(condition, value)
+	partialQuery := u.db.Model(user).Where("user_name = ?", userName)
 	partialQuery, err := addQueryOptions(partialQuery, options)
 	if err != nil {
 		return nil, err
 	}
+
 	err = partialQuery.Select()
 	if err != nil {
 		return nil, err
 	}
+
 	return user, nil
+}
+
+func (u *User) GetUsers(
+	ctx context.Context,
+	userID *uuid.UUID,
+	options *QueryOptions,
+) ([]*models.User, error) {
+	var users []*models.User
+
+	partialQuery := u.db.Model(&users)
+	if userID != nil {
+		partialQuery = partialQuery.Where("id = ?", *userID)
+	}
+
+	partialQuery, err := addQueryOptions(partialQuery, options)
+	if err != nil {
+		return nil, err
+	}
+
+	err = partialQuery.Select()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, err
 }
