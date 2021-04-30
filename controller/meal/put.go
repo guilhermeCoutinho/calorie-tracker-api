@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/controller/contextextensions"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/guilhermeCoutinho/api-studies/models"
@@ -22,7 +23,8 @@ func (m *Meal) Put(ctx context.Context, args *messages.UpdateMealRequest, vars *
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusUnauthorized}
 	}
 
-	meal, err := m.dal.Meal.GetMeal(ctx, args.ID, args.UserID)
+	mealIDQuery := m.getMealIDFromURL(&args.ID, vars)
+	meals, err := m.dal.Meal.GetMeals(ctx, mealIDQuery, args.UserID, nil)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}
@@ -31,6 +33,8 @@ func (m *Meal) Put(ctx context.Context, args *messages.UpdateMealRequest, vars *
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
+
+	meal := meals[0].Meal
 
 	err = m.upadteMeal(meal, args.CreateMealPayload)
 	if err != nil {
@@ -50,6 +54,13 @@ func (m *Meal) Put(ctx context.Context, args *messages.UpdateMealRequest, vars *
 	return &messages.CreateMealResponse{
 		Meals: meal,
 	}, nil
+}
+
+func (m *Meal) getMealIDFromURL(idFromArgs *uuid.UUID, vars *messages.RouteVars) *uuid.UUID {
+	if vars != nil && vars.MealID != nil {
+		return vars.MealID
+	}
+	return idFromArgs
 }
 
 func (m *Meal) upadteMeal(meal *models.Meal, req *messages.CreateMealPayload) error {

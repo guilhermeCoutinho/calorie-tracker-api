@@ -2,6 +2,8 @@ package meal
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/guilhermeCoutinho/api-studies/controller/contextextensions"
@@ -11,6 +13,9 @@ import (
 )
 
 func (m *Meal) Get(ctx context.Context, args *struct{}, vars *messages.RouteVars) (*messages.GetMealsResponse, *wrapper.HandlerError) {
+	raw, _ := json.Marshal(vars)
+	fmt.Println(string(raw))
+
 	claims, err := contextextensions.ClaimsFromCtx(ctx)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
@@ -22,7 +27,8 @@ func (m *Meal) Get(ctx context.Context, args *struct{}, vars *messages.RouteVars
 		return nil, wrapperErr
 	}
 
-	meals, err := m.dal.Meal.GetMeals(ctx, userID, contextextensions.GetQueryOptions(ctx))
+	mealIDForQuery := m.getMealIDFromURL(nil, vars)
+	meals, err := m.dal.Meal.GetMeals(ctx, mealIDForQuery, userID, contextextensions.GetQueryOptions(ctx))
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}

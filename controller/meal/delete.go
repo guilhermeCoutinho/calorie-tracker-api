@@ -22,7 +22,8 @@ func (m *Meal) Delete(ctx context.Context, args *messages.DeleteMealRequest, var
 		return nil, wrapperErr
 	}
 
-	err = m.dal.Meal.DeleteMeal(ctx, args.ID, userID)
+	mealID := m.getMealIDFromURL(&args.ID, vars)
+	err = m.dal.Meal.DeleteMeal(ctx, *mealID, userID)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}

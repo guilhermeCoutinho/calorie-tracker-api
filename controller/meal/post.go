@@ -29,7 +29,7 @@ func (m *Meal) Post(ctx context.Context, args *messages.CreateMealPayload, vars 
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
 
-	meal, err := m.newMealFromRequest(args)
+	meal, err := m.newMealFromRequest(vars, args)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusBadRequest}
 	}
@@ -65,7 +65,7 @@ func (m *Meal) validatePostAccessLevel(claims *models.Claims, args *messages.Cre
 	return nil
 }
 
-func (m *Meal) newMealFromRequest(req *messages.CreateMealPayload) (*models.Meal, error) {
+func (m *Meal) newMealFromRequest(vars *messages.RouteVars, req *messages.CreateMealPayload) (*models.Meal, error) {
 	mealDate, err := time.Parse("2006-Jan-02", *req.Date)
 	if err != nil {
 		return nil, err
@@ -76,8 +76,13 @@ func (m *Meal) newMealFromRequest(req *messages.CreateMealPayload) (*models.Meal
 		return nil, err
 	}
 
+	mealID := uuid.New()
+	if vars != nil && vars.MealID != nil {
+		mealID = *vars.MealID
+	}
+
 	meal := &models.Meal{
-		ID:          uuid.New(),
+		ID:          mealID,
 		UserID:      *req.UserID,
 		Meal:        *req.Meal,
 		Calories:    *req.Calories,

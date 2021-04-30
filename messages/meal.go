@@ -23,7 +23,8 @@ type CreateMealResponse struct {
 }
 
 type RouteVars struct {
-	UserID *string `json:"userID"`
+	UserID *string    `json:"userID"`
+	MealID *uuid.UUID `json:"mealID"`
 }
 
 type GetMealsResponse struct {

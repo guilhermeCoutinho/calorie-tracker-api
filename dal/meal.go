@@ -13,8 +13,7 @@ import (
 
 type MealDAL interface {
 	UpsertMeal(ctx context.Context, user *models.Meal) error
-	GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
-	GetMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) (*models.Meal, error)
+	GetMeals(ctx context.Context, id *uuid.UUID, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error)
 	DeleteMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) error
 }
 
@@ -39,12 +38,16 @@ func (u *Meal) UpsertMeal(ctx context.Context, meal *models.Meal) error {
 	return err
 }
 
-func (u *Meal) GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error) {
+func (u *Meal) GetMeals(ctx context.Context, id *uuid.UUID, userID *uuid.UUID, options *QueryOptions) ([]*models.MealWithLimit, error) {
 	var meals []*models.MealWithLimit
 
 	partialQuery := u.db.Model(&meals)
 	if userID != nil {
 		partialQuery = partialQuery.Where("user_id = ?", *userID)
+	}
+
+	if id != nil {
+		partialQuery = partialQuery.Where("id = ?", *id)
 	}
 
 	partialQuery, err := addQueryOptions(partialQuery, options)
@@ -58,22 +61,6 @@ func (u *Meal) GetMeals(ctx context.Context, userID *uuid.UUID, options *QueryOp
 	}
 
 	return meals, err
-}
-
-func (u *Meal) GetMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) (*models.Meal, error) {
-	var meal *models.Meal
-
-	partialQuery := u.db.Model(&meal).Where("id = ?", id)
-	if userID != nil {
-		partialQuery = partialQuery.Where("user_id = ?", *userID)
-	}
-
-	err := partialQuery.Select()
-	if err != nil {
-		return nil, err
-	}
-
-	return meal, err
 }
 
 func (u *Meal) DeleteMeal(ctx context.Context, id uuid.UUID, userID *uuid.UUID) error {
