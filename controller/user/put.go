@@ -42,41 +42,29 @@ func (u *User) Put(ctx context.Context, args *messages.UpdateUserRequest, vars *
 }
 
 func validateUpdateAccess(claims *models.Claims, args *messages.UpdateUserRequest, vars *messages.RouteVars) (*uuid.UUID, error) {
-	noUserIDSpecified := (vars == nil || vars.UserID == nil) && args.ID == nil
+	noUserIDSpecified := (vars == nil || vars.UserID == nil)
 	if noUserIDSpecified {
 		return nil, fmt.Errorf("no user specified in put user")
 	}
 
+	if *vars.UserID == "me" {
+		return &claims.UserID, nil
+	}
+
+	userID, err := uuid.Parse(*vars.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if userID == claims.UserID {
+		return &claims.UserID, nil
+	}
+
 	hasAccess := claims.AccessLevel == models.Admin || claims.AccessLevel == models.Manager
-
-	validateFunc := func(userID uuid.UUID) (*uuid.UUID, error) {
-		if userID == claims.UserID {
-			return &claims.UserID, nil
-		}
-
-		if hasAccess {
-			return &userID, nil
-		}
-		return nil, fmt.Errorf("wrong acccess level")
+	if hasAccess {
+		return &userID, nil
 	}
-
-	if vars != nil && vars.UserID != nil {
-		if *vars.UserID == "me" {
-			return &claims.UserID, nil
-		}
-		fmt.Println("Vars != nil", *vars.UserID)
-		userID, err := uuid.Parse(*vars.UserID)
-		if err != nil {
-			return nil, err
-		}
-		return validateFunc(userID)
-	}
-
-	if args.ID != nil {
-		return validateFunc(*args.ID)
-	}
-
-	return nil, fmt.Errorf("wrong access level")
+	return nil, fmt.Errorf("wrong acccess level")
 }
 
 func updateUser(user *models.User, args *messages.UpdateUserRequest, accessLevel models.AccessLevel) error {
