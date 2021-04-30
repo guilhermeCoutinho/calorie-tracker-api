@@ -1,21 +1,24 @@
 package messages
 
-import "github.com/guilhermeCoutinho/api-studies/models"
+import (
+	"github.com/google/uuid"
+	"github.com/guilhermeCoutinho/api-studies/models"
+)
 
 type CreateUserRequest struct {
-	Username     string `json:"username"`
+	Username     string `json:"user_name"`
 	Password     string `json:"password"`
-	CalorieLimit int    `json:"calorieLimit"`
+	CalorieLimit int    `json:"calorie_limit"`
 }
 
 type GetUsersResponse struct {
-	BaseResponse
-	Users *models.User `json:"users"`
+	Users []*models.User `json:"users"`
 }
 
 type UpdateUserRequest struct {
-	Username     *string `json:"userName"`
-	CalorieLimit *int    `json:"caloriesLimit"`
-	AccessLevel  *string `json:"accessLevel"`
-	Password     *string `json:"password"`
+	ID           *uuid.UUID
+	Username     *string             `json:"user_name"`
+	CalorieLimit *int                `json:"calorie_limit"`
+	AccessLevel  *models.AccessLevel `json:"access_level"`
+	Password     *string             `json:"password"`
 }

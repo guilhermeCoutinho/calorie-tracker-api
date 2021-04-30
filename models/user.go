@@ -8,11 +8,11 @@ import (
 
 //User is the model that governs all notes objects retrived or inserted into the DB
 type User struct {
-	ID           uuid.UUID   `json:"-" pg:"id, pk" sortable:"true"`
-	UserName     string      `json:"userName" pg:"user_name,notnull"`
+	ID           uuid.UUID   `json:"id" pg:"id, pk"`
+	UserName     string      `json:"user_name" pg:"user_name,notnull"`
 	Password     string      `json:"-" pg:"password,notnull"`
-	CalorieLimit int         `json:"caloriesLimit" pg:"calorie_limit, notnull"`
-	AccessLevel  AccessLevel `json:"acessLevel" pg:"access_level"`
+	CalorieLimit int         `json:"calorie_limit" pg:"calorie_limit" sql:",notnull"`
+	AccessLevel  AccessLevel `json:"access_level" pg:"access_level, notnull" sql:",notnull"`
 
 	CreatedAt time.Time `json:"-" pg:"created_at,notnull"`
 	UpdatedAt time.Time `json:"-" pg:"updated_at,notnull"`

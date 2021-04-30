@@ -1,11 +1,10 @@
 package messages
 
 type LoginRequest struct {
-	Username string `json:"username"`
+	Username string `json:"user_name"`
 	Password string `json:"password"`
 }
 
 type LoginResponse struct {
-	BaseResponse
 	AccessToken string `json:"token"`
 }

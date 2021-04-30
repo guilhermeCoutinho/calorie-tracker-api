@@ -22,13 +22,12 @@ func (u *User) Get(ctx context.Context, args *struct{}, vars *messages.RouteVars
 		return nil, wrapperErr
 	}
 
-	user, err := u.dal.User.GetUserByID(ctx, *userID, contextextensions.GetQueryOptions(ctx))
+	users, err := u.dal.User.GetUsers(ctx, userID, contextextensions.GetQueryOptions(ctx))
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusNotFound}
 	}
 
 	return &messages.GetUsersResponse{
-		Users:        user,
-		BaseResponse: messages.BaseResponse{Code: http.StatusOK},
+		Users: users,
 	}, nil
 }

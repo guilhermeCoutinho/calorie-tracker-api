@@ -28,7 +28,7 @@ func NewUserNoAuth(
 	}
 }
 
-func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest, vars *struct{}) (*messages.BaseResponse, *wrapper.HandlerError) {
+func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest, vars *struct{}) (*struct{}, *wrapper.HandlerError) {
 	hashedPassword, err := contextextensions.HashPassword(args.Password)
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
@@ -46,5 +46,5 @@ func (u *UserNoAuth) Post(ctx context.Context, args *messages.CreateUserRequest,
 	if err != nil {
 		return nil, &wrapper.HandlerError{Err: err, StatusCode: http.StatusInternalServerError}
 	}
-	return &messages.BaseResponse{Code: http.StatusOK}, nil
+	return &struct{}{}, nil
 }

@@ -58,9 +58,6 @@ func (a *Auth) Post(ctx context.Context, args *messages.LoginRequest, vars *stru
 
 	response := &messages.LoginResponse{
 		AccessToken: token,
-		BaseResponse: messages.BaseResponse{
-			Code: http.StatusOK,
-		},
 	}
 	return response, nil
 }
