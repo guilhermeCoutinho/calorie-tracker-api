@@ -6,11 +6,24 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/guilhermeCoutinho/api-studies/messages"
 	"github.com/stretchr/testify/assert"
 )
 
 const URL = "http://localhost:8080"
+
+func ptrToInt(val int) *int {
+	return &val
+}
+
+func ptrToUUID(val uuid.UUID) *uuid.UUID {
+	return &val
+}
+
+func ptrToString(val string) *string {
+	return &val
+}
 
 func TestCreateMealSuccess(t *testing.T) {
 	t.Parallel()
@@ -19,12 +32,11 @@ func TestCreateMealSuccess(t *testing.T) {
 
 	token := getAuthenticatedUser(t)
 
-	calories := 100
 	createMealRequest := &messages.CreateMealPayload{
-		Meal:     "hamburguer",
-		Calories: &calories,
-		Date:     "2021-Jan-01",
-		Time:     "2h00m",
+		Meal:     ptrToString("hamburguer"),
+		Calories: ptrToInt(100),
+		Date:     ptrToString("2021-Jan-01"),
+		Time:     ptrToString("2h00m"),
 	}
 
 	doRequest(t, http.MethodPost, "/meals", &token, createMealRequest, &map[string]interface{}{})
@@ -42,12 +54,11 @@ func TestCreateMeal(t *testing.T) {
 
 	token := getAuthenticatedUser(t)
 
-	calories := 100
 	createMealRequest := &messages.CreateMealPayload{
-		Meal:     "hamburguer",
-		Calories: &calories,
-		Date:     "2021-Jan-01",
-		Time:     "2h00m",
+		Calories: ptrToInt(100),
+		Meal:     ptrToString("hamburguer"),
+		Date:     ptrToString("2021-Jan-01"),
+		Time:     ptrToString("2h00m"),
 	}
 
 	doRequest(t, http.MethodPost, "/meals", &token, createMealRequest, &map[string]interface{}{})
@@ -66,9 +77,9 @@ func TestCreateMealWithCalorieProvider(t *testing.T) {
 	token := getAuthenticatedUser(t)
 
 	createMealRequest := &messages.CreateMealPayload{
-		Meal: "hamburguer",
-		Date: "2021-Jan-01",
-		Time: "2h00m",
+		Meal: ptrToString("hamburguer"),
+		Date: ptrToString("2021-Jan-01"),
+		Time: ptrToString("2h00m"),
 	}
 
 	createMealResponse := &messages.CreateMealResponse{}
@@ -87,12 +98,11 @@ func TestCreateMealFail(t *testing.T) {
 
 	token := getAuthenticatedUser(t)
 
-	calories := -10
 	createMealRequest := &messages.CreateMealPayload{
-		Meal:     "hamburguer",
-		Date:     "2021-Jan-01",
-		Time:     "2h00m",
-		Calories: &calories,
+		Meal:     ptrToString("hamburguer"),
+		Date:     ptrToString("2021-Jan-01"),
+		Time:     ptrToString("2h00m"),
+		Calories: ptrToInt(-10),
 	}
 
 	statusCode := doRequest(t, http.MethodPost, "/users/me/meals", &token, createMealRequest, &map[string]interface{}{})
@@ -109,10 +119,10 @@ func TestMealsBelowLimit(t *testing.T) {
 	calories := 99
 	for i := 0; i < 5; i++ {
 		createMealRequest := &messages.CreateMealPayload{
-			Meal:     "hamburguer",
 			Calories: &calories,
-			Date:     fmt.Sprintf("2021-Jan-0%d", i+1),
-			Time:     "12h",
+			Meal:     ptrToString("hamburguer"),
+			Time:     ptrToString("12h"),
+			Date:     ptrToString(fmt.Sprintf("2021-Jan-0%d", i+1)),
 		}
 
 		createMealResponse := &messages.CreateMealResponse{}
@@ -138,10 +148,10 @@ func TestMealsAboveLimit(t *testing.T) {
 	calories := 50
 	for i := 0; i < 3; i++ {
 		createMealRequest := &messages.CreateMealPayload{
-			Meal:     "hamburguer",
 			Calories: &calories,
-			Date:     "2021-Jan-01",
-			Time:     "12h",
+			Meal:     ptrToString("hamburguer"),
+			Date:     ptrToString("2021-Jan-01"),
+			Time:     ptrToString("12h"),
 		}
 
 		createMealResponse := &messages.CreateMealResponse{}

@@ -85,7 +85,7 @@ func TestCreateMeal(t *testing.T) {
 				m.MockMealDAL.EXPECT().UpsertMeal(gomock.Any(), gomock.Any()).Do(func(ctx context.Context, meal *models.Meal) {
 					assert.Equal(t, 100, meal.Calories)
 					assert.Equal(t, claims.UserID, meal.UserID)
-					assert.Equal(t, args.Meal, meal.Meal)
+					assert.Equal(t, *args.Meal, meal.Meal)
 				})
 			},
 			err: nil,
@@ -127,11 +127,11 @@ func TestCreateMeal(t *testing.T) {
 			mocks: func(ctx context.Context, args *messages.CreateMealPayload, m *Mocks) {
 				claims, err := contextextensions.ClaimsFromCtx(ctx)
 				assert.Nil(t, err)
-				m.MockCaloroeProvider.EXPECT().GetCalories(args.Meal).Return(99, nil)
+				m.MockCaloroeProvider.EXPECT().GetCalories(*args.Meal).Return(99, nil)
 				m.MockMealDAL.EXPECT().UpsertMeal(gomock.Any(), gomock.Any()).Do(func(ctx context.Context, meal *models.Meal) {
 					assert.Equal(t, 99, meal.Calories)
 					assert.Equal(t, claims.UserID, meal.UserID)
-					assert.Equal(t, args.Meal, meal.Meal)
+					assert.Equal(t, *args.Meal, meal.Meal)
 				})
 			},
 			err: nil,

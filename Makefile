@@ -1,4 +1,4 @@
-TESTABLE_PACKAGES=`go list ./... | grep 'http/controller'`
+TESTABLE_PACKAGES=`go list ./... | grep 'controller'`
 
 deps:
 	@sh ./dev/deps.sh
