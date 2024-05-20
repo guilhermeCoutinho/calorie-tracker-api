@@ -17,8 +17,8 @@ type ProviderImpl struct {
 }
 
 const (
-	appID  = "d7684a71"
-	appKey = "42d601cad14f572657f5d1d3293e2fdf"
+	appID  = ""
+	appKey = ""
 )
 
 type queryPayload struct {
